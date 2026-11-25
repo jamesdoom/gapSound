@@ -2,13 +2,13 @@
 
 ## Status
 
-Phase 1 remains in progress. Latest update: accessibility focus/label/feedback fixes, restored sidebar toggle, and desktop/mobile axe regression coverage. GS-003 still needs source policy review. GS-002 now has automated accessibility and keyboard checks; real assistive-technology review and full application process-restart coverage remain.
+Phase 1 remains in progress. Latest update: CI repair for the Settings retention state race and Node 20 action deprecation. GS-003 still needs source policy review. GS-002 now has automated accessibility and keyboard checks; real assistive-technology review and full application process-restart coverage remain.
 
 Vercel Authentication was verified to protect all deployments in the previous update. Hosting remains unsupported for real application use until storage/auth architecture is adapted. No Vercel settings or paid services were changed this session. Git pushes may trigger the user's existing protected Vercel build integration.
 
 ## Current verification
 
-- 85 tests across 11 Vitest files passed, including migration upgrades, HTTP header parsing, source isolation, SQLite close/reopen persistence, successful recovery and exact loopback-port checks.
+- 86 tests across 11 Vitest files passed, including migration upgrades, HTTP header parsing, source isolation, SQLite close/reopen persistence, successful recovery and exact loopback-port checks.
 - TypeScript (including production build), lint and production build passed.
 - All 20 Chrome browser tests passed on isolated loopback port 3100: axe default-rule scans across six screens at 1280/320px, keyboard skip/search/collapsed navigation and focus, success announcements, and the existing six workflow tests. All views passed horizontal-overflow checks. Desktop/mobile screenshots were inspected. The user's server on port 3000 was left alone.
 - No migration was needed in this update. Migration 0003 (retention eligibility index) was applied in the previous update. Repeated application and upgrades from an existing schema are covered by tests.
@@ -42,3 +42,7 @@ Browser tests require Playwright Chromium or PLAYWRIGHT_CHANNEL=chrome, use a fr
 ## Next action and learning
 
 Continue GS-003 source-policy review or GS-002 application process-restart coverage. See LEARNING.md for how persisted deadlines prevent refresh clicks or restarts from bypassing provider rate limits. Question: why is an in-memory timer insufficient to enforce Retry-After after an application restart?
+
+## CI repair
+
+Reported run 45650558675 failed its sixth browser test (retention success feedback); the Node 20 message was a separate action-runtime warning. Authenticated job logs were inspected using the existing Git credential helper in memory, without writing or displaying credentials. A deterministic component test reproduced the Settings key/remount race before the fix and passed afterward. Only the preference form now remounts, preserving retention state. Checkout v7.0.1, setup-node v7.1.0 and upload-artifact v7.0.2 were verified from official action metadata as Node 24 actions and pinned by SHA. Application runtime remains Node 22. Failed browser diagnostics are retained for seven days; local data/secrets are excluded. Hosted CI verification will be followed after push.

@@ -858,12 +858,10 @@ export function Dashboard() {
             </div>
           )}
           {page === "Settings" && (
-            <section
-              className="panel settings-panel"
-              key={`${data?.settings?.weeklyHours}-${data?.settings?.refreshMinutes}`}
-            >
+            <section className="panel settings-panel">
               <h2>Workspace preferences</h2>
               <form
+                key={`${data?.settings?.weeklyHours}-${data?.settings?.refreshMinutes}`}
                 className="stack"
                 onSubmit={(e) => {
                   e.preventDefault();

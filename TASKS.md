@@ -12,3 +12,5 @@
 | GS-008 | Phase 1 release acceptance                   | P0       | GS-002 through GS-007 | Full critical workflow tests, security/accessibility review, backup/restore test, secret scanning and dependency review                                                 | Pending                                                                                                                           |
 
 No Phase 2 implementation is authorized yet. P0 tasks with unmet dependencies do not block independent Phase 1 work.
+
+CI repair: fix Settings cleanup state loss under delayed initial preferences; upgrade and SHA-pin official Node 24 actions; preserve failed browser diagnostics. Local deterministic regression coverage added; hosted run status is reported in HANDOFF.md.

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.6 — 2026-11-25
+
+- Fixed a Settings remount race that discarded retention cleanup confirmation/results when initial preferences finished loading.
+- Added a deterministic component regression test that fails before the fix and passes afterward.
+- Updated checkout/setup-node to verified Node 24 action releases, pinned by commit; retained Node 22 for the application.
+- Added seven-day CI retention of failed browser-test diagnostics using a pinned Node 24 artifact action.
+
 ## 0.1.5 — 2026-11-25
 
 - Fixed a Tailwind class collision that hid the sidebar toggle.

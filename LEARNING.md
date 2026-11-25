@@ -1,5 +1,13 @@
 # Security learning notes
 
+## Action runtimes and repeatable CI failures
+
+The Node version used inside a GitHub action is separate from the Node version setup-node installs for application commands. CI now pins official checkout, setup-node and upload-artifact releases that declare Node 24 runtimes, while the app continues testing on Node 22. Immutable commit references reduce exposure to changed release tags. Read-only repository permissions remain in place, and failure artifacts contain only isolated test fixtures.
+
+The reported CI failure was a separate React state-lifetime bug: a key on the Settings section remounted its retention panel when preferences arrived. Moving the key to the preferences form preserves cleanup state. The regression test explicitly delays initial preferences until cleanup is in flight, reproduces the failure without timing sleeps, then verifies the success message survives. Increasing test timeouts would not fix a component that lost its state.
+
+**Question:** Why can changing setup-node's application version fail to remove an action's Node runtime warning?
+
 ## Accessible controls support deliberate security decisions
 
 The workspace now moves focus to new screen headings, supports a focusable skip-link destination, labels study progress, explicitly names collapsed navigation and announces successful saves without moving form focus. A keyboard regression test exposed a real class collision: Tailwind's collapse utility hid the navigation toggle. It now uses the distinct nav-toggle class. These changes keep important controls and feedback available without a mouse; they do not change authorization or input validation.
