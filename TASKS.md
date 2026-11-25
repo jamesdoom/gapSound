@@ -13,4 +13,4 @@
 
 No Phase 2 implementation is authorized yet. P0 tasks with unmet dependencies do not block independent Phase 1 work.
 
-CI repair: fix Settings cleanup state loss under delayed initial preferences; upgrade and SHA-pin official Node 24 actions; preserve failed browser diagnostics. Local deterministic regression coverage added; hosted run status is reported in HANDOFF.md.
+CI repair: fix Settings cleanup state loss under delayed initial preferences; upgrade and SHA-pin official Node 24 actions; preserve failed browser diagnostics. Completed with deterministic regression coverage and successful hosted verification (run 45652241919; zero annotations). See HANDOFF.md.
