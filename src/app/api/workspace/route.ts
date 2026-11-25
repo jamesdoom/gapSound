@@ -1,9 +1,15 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { eq, isNull } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { db } from "@/db";
-import { articles, notes, sessions, settings, tasks } from "@/db/schema";
+import { articles, notes, settings, tasks } from "@/db/schema";
 import { boundedJson, validateRequest } from "@/lib/security";
+import {
+  startSession,
+  stopSession,
+  stopSessionInput,
+  TrainingError,
+} from "@/services/training";
 import { workspace } from "@/services/workspace";
 import { refreshFeeds } from "@/services/feeds";
 import { intelligenceQuery } from "@/lib/intelligence-query";
@@ -29,7 +35,7 @@ const actionSchema = z.discriminatedUnion("action", [
     done: z.boolean(),
   }),
   z.object({ action: z.literal("start") }),
-  z.object({ action: z.literal("stop") }),
+  stopSessionInput,
   z.object({
     action: z.literal("note"),
     title: z.string().trim().min(1).max(200),
@@ -146,19 +152,10 @@ export async function POST(request: Request) {
           .where(eq(tasks.id, input.id));
         break;
       case "start":
-        await db
-          .insert(sessions)
-          .values({
-            id: crypto.randomUUID(),
-            startedAt: new Date().toISOString(),
-          })
-          .onConflictDoNothing();
+        await startSession();
         break;
       case "stop":
-        await db
-          .update(sessions)
-          .set({ endedAt: new Date().toISOString() })
-          .where(isNull(sessions.endedAt));
+        await stopSession(input);
         break;
       case "note":
         await db.insert(notes).values({
@@ -180,7 +177,9 @@ export async function POST(request: Request) {
         break;
     }
     return NextResponse.json({ ok: true });
-  } catch {
+  } catch (error) {
+    if (error instanceof TrainingError)
+      return NextResponse.json({ error: error.message }, { status: 400 });
     return NextResponse.json(
       {
         error: "Could not complete action. Check database setup and try again.",

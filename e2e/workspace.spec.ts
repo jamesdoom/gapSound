@@ -494,3 +494,129 @@ test("scheduled reviews persist, reschedule and retain completion history", asyn
   });
   expect(rejected.status()).toBe(403);
 });
+
+test("unfinished sessions can be recovered with an actual local end time", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page
+    .getByRole("navigation")
+    .getByRole("button", { name: "Daily Training" })
+    .click();
+  await page
+    .getByRole("button", { name: "Start session", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Stop session", exact: true }),
+  ).toBeVisible();
+  const data = await (await page.request.get("/api/workspace")).json();
+  const active = data.sessions.find(
+    (s: { endedAt: string | null }) => !s.endedAt,
+  );
+  await page.reload();
+  await page
+    .getByRole("navigation")
+    .getByRole("button", { name: "Daily Training" })
+    .click();
+  await page.getByText("Recover a forgotten session", { exact: true }).click();
+  await page.setViewportSize({ width: 320, height: 800 });
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  const local = await page.evaluate((started: string) => {
+    const date = new Date(started);
+    return new Date(date.getTime() - date.getTimezoneOffset() * 60000)
+      .toISOString()
+      .slice(0, -1);
+  }, active.startedAt);
+  await page.getByLabel("Actual session end (local time)").fill(local);
+  await page.getByRole("button", { name: "Finish recovered session" }).click();
+  await expect(
+    page.getByRole("button", { name: "Start session", exact: true }),
+  ).toBeVisible();
+  const after = await (await page.request.get("/api/workspace")).json();
+  expect(
+    after.sessions.find((s: { id: string }) => s.id === active.id).endedAt,
+  ).toBe(active.startedAt);
+});
+test("local midnight refreshes objectives and review status without splitting an active session", async ({
+  browser,
+}) => {
+  const context = await browser.newContext({ timezoneId: "America/New_York" });
+  const page = await context.newPage();
+  try {
+    await page.clock.setFixedTime(new Date("2026-11-25T23:59:58-05:00"));
+    await page.goto("/");
+    await page
+      .getByRole("navigation")
+      .getByRole("button", { name: "Daily Training" })
+      .click();
+    await page
+      .getByLabel("New study objective")
+      .fill("Midnight previous objective");
+    await page.getByRole("button", { name: "Add", exact: true }).click();
+    await expect(page.getByLabel("Midnight previous objective")).toBeVisible();
+    const panel = page.getByRole("region", { name: "Scheduled reviews" });
+    await panel
+      .getByLabel("Review topic", { exact: true })
+      .fill("Midnight review");
+    await panel
+      .getByLabel("Review due date", { exact: true })
+      .fill("2026-11-26");
+    await panel
+      .getByRole("button", { name: "Schedule review", exact: true })
+      .click();
+    const review = panel
+      .locator("article")
+      .filter({ hasText: "Midnight review" });
+    await expect(review).toContainText("Upcoming");
+    await page
+      .getByRole("button", { name: "Start session", exact: true })
+      .click();
+    await expect(
+      page.getByRole("button", { name: "Stop session", exact: true }),
+    ).toBeVisible();
+    const before = await (
+      await page.request.get("/api/workspace?day=2026-11-25")
+    ).json();
+    const active = before.sessions.find(
+      (s: { endedAt: string | null }) => !s.endedAt,
+    );
+    await page.clock.setFixedTime(new Date("2026-11-26T00:00:02-05:00"));
+    await expect(page.getByLabel("Midnight previous objective")).toHaveCount(0);
+    await expect(review).toContainText("Due today");
+    await page.getByLabel("New study objective").fill("Midnight new objective");
+    await page.getByRole("button", { name: "Add", exact: true }).click();
+    await expect(page.getByLabel("Midnight new objective")).toBeVisible();
+    const yesterday = await (
+      await page.request.get("/api/workspace?day=2026-11-25")
+    ).json();
+    expect(
+      yesterday.checklist.some(
+        (t: { title: string }) => t.title === "Midnight previous objective",
+      ),
+    ).toBe(true);
+    expect(
+      yesterday.checklist.some(
+        (t: { title: string }) => t.title === "Midnight new objective",
+      ),
+    ).toBe(false);
+    const today = await (
+      await page.request.get("/api/workspace?day=2026-11-26")
+    ).json();
+    expect(
+      today.checklist.some(
+        (t: { title: string }) => t.title === "Midnight new objective",
+      ),
+    ).toBe(true);
+    expect(
+      today.sessions.find((s: { endedAt: string | null }) => !s.endedAt).id,
+    ).toBe(active.id);
+    await page
+      .getByRole("button", { name: "Stop session", exact: true })
+      .click();
+    await expect(
+      page.getByRole("button", { name: "Start session", exact: true }),
+    ).toBeVisible();
+  } finally {
+    await context.close();
+  }
+});

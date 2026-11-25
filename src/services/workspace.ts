@@ -1,11 +1,11 @@
-import { desc, eq, gte, like, or, sql } from "drizzle-orm";
+import { desc, eq, like, or, sql } from "drizzle-orm";
+import { readTraining } from "./training";
 import { listArticles } from "./intelligence";
 import { listWatchlists } from "./watchlists";
 import { db } from "../db";
 import {
   articles,
   notes,
-  sessions,
   settings,
   sources,
   tasks,
@@ -51,17 +51,7 @@ export async function workspace(
       .orderBy(desc(vulnerabilities.addedAt))
       .limit(100),
     db.select().from(tasks).where(eq(tasks.day, day)).limit(100),
-    db
-      .select()
-      .from(sessions)
-      .where(
-        gte(
-          sessions.startedAt,
-          new Date(Date.now() - 7 * 86400000).toISOString(),
-        ),
-      )
-      .orderBy(desc(sessions.startedAt))
-      .limit(1000),
+    readTraining(),
     db
       .select()
       .from(notes)
@@ -94,7 +84,9 @@ export async function workspace(
     sources: sourceList,
     kevs,
     checklist,
-    sessions: study,
+    sessions: study.sessions,
+    studyMinutes: study.studyMinutes,
+    trainingDay: day,
     notes: research,
     settings: preferences[0],
     counts: { ...counts[0], kev: kevCount.total },

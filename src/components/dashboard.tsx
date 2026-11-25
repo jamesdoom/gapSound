@@ -44,8 +44,7 @@ const planned = [
   "CyberRecall",
   "Analytics",
 ];
-function localDay() {
-  const date = new Date();
+function localDay(date = new Date()) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }
 function stamp(value: string | null) {
@@ -76,6 +75,7 @@ export function Dashboard() {
   const [pending, setPending] = useState(false);
   const [loading, setLoading] = useState(true);
   const [now, setNow] = useState<Date>();
+  const trainingDay = localDay(now);
   const [announcement, setAnnouncement] = useState("");
   const heading = useRef<HTMLHeadingElement>(null);
   const search = useRef<HTMLInputElement>(null);
@@ -90,7 +90,7 @@ export function Dashboard() {
         category,
         saved: String(saved),
         watchlist: watchlistId,
-        day: localDay(),
+        day: trainingDay,
         page: String(articlePage),
         from: publishedFrom,
         to: publishedTo,
@@ -117,6 +117,7 @@ export function Dashboard() {
     publishedFrom,
     publishedTo,
     watchlistId,
+    trainingDay,
   ]);
   const mutate = useCallback(
     async (body: Record<string, unknown>) => {
@@ -160,7 +161,8 @@ export function Dashboard() {
     return () => clearTimeout(timer);
   }, [load]);
   useEffect(() => {
-    const timer = setInterval(() => setNow(new Date()), 1000);
+    const updateClock = () => setNow(new Date());
+    const timer = setInterval(updateClock, 1000);
     return () => clearInterval(timer);
   }, []);
   useEffect(() => {
@@ -180,14 +182,27 @@ export function Dashboard() {
     }, interval * 60000);
     return () => clearInterval(timer);
   }, [interval, mutate]);
+  useEffect(() => {
+    const refresh = () => {
+      setNow(new Date());
+      void load();
+    };
+    const visible = () => {
+      if (document.visibilityState === "visible") refresh();
+    };
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", visible);
+    return () => {
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", visible);
+    };
+  }, [load]);
   const active = data?.sessions.find((s) => !s.endedAt);
-  const studyMinutes = Math.floor(
-    (data?.sessions.reduce(
-      (sum, s) =>
-        sum + (s.endedAt ? Date.parse(s.endedAt) - Date.parse(s.startedAt) : 0),
-      0,
-    ) ?? 0) / 60000,
-  );
+  const studyMinutes = data?.studyMinutes ?? 0;
+  const currentChecklist =
+    !data?.trainingDay || data.trainingDay === trainingDay
+      ? data?.checklist
+      : [];
   const goal = (data?.settings?.weeklyHours ?? 15) * 60;
   const changePage = (title: string) => {
     setPage(title);
@@ -511,10 +526,10 @@ export function Dashboard() {
         }) ?? "today"}
       </p>
       <div className="checklist">
-        {!data?.checklist.length && (
+        {!currentChecklist?.length && (
           <p className="muted">A focused session starts with one objective.</p>
         )}
-        {data?.checklist.map((task) => (
+        {currentChecklist?.map((task) => (
           <label key={task.id}>
             <input
               type="checkbox"
@@ -573,12 +588,60 @@ export function Dashboard() {
         <button
           className="primary"
           disabled={pending}
-          onClick={() => void mutate({ action: active ? "stop" : "start" })}
+          onClick={() =>
+            void mutate(
+              active ? { action: "stop", id: active.id } : { action: "start" },
+            )
+          }
         >
           {active ? <Square size={15} /> : <Play size={15} />}
           {active ? "Stop session" : "Start session"}
         </button>
       </div>
+      {active && (
+        <div>
+          <p className="small muted">
+            Unfinished session started {stamp(active.startedAt)}. It survives
+            reloads, app restarts and midnight. Elapsed time includes time away;
+            only completed time counts toward your goal.
+          </p>
+          <details key={active.id}>
+            <summary>Recover a forgotten session</summary>
+            <p>
+              Record when you actually finished. This ends the existing session
+              and preserves its start time.
+            </p>
+            <form
+              className="stack"
+              onSubmit={(event) => {
+                event.preventDefault();
+                const value = String(
+                  new FormData(event.currentTarget).get("endedAt"),
+                );
+                const end = new Date(value);
+                if (!Number.isFinite(end.getTime())) return;
+                void mutate({
+                  action: "stop",
+                  id: active.id,
+                  endedAt: end.toISOString(),
+                });
+              }}
+            >
+              <label>
+                Actual session end (local time)
+                <input
+                  name="endedAt"
+                  type="datetime-local"
+                  step="any"
+                  required
+                  disabled={pending}
+                />
+              </label>
+              <button disabled={pending}>Finish recovered session</button>
+            </form>
+          </details>
+        </div>
+      )}
       <div className="progress-label">
         <span>Last 7 days</span>
         <strong>
@@ -592,8 +655,8 @@ export function Dashboard() {
         max={goal}
       />
       <p className="small muted">
-        Completed session time. Weekly goal: {data?.settings?.weeklyHours ?? 15}{" "}
-        hours.
+        Completed time overlapping the last seven days. Weekly goal:{" "}
+        {data?.settings?.weeklyHours ?? 15} hours.
       </p>
     </section>
   );
@@ -769,7 +832,7 @@ export function Dashboard() {
                     <em> min</em>
                   </strong>
                   <small>
-                    {data?.checklist.filter((t) => t.done).length ?? 0}{" "}
+                    {currentChecklist?.filter((t) => t.done).length ?? 0}{" "}
                     objectives completed today
                   </small>
                 </div>
@@ -901,12 +964,13 @@ export function Dashboard() {
           )}
           {page === "Daily Training" && (
             <div className="training-layout">
-              <ReviewPanel day={localDay()} />
+              <ReviewPanel day={trainingDay} />
               {trainingPanel}
               <section className="panel">
                 <h2>Session history</h2>
                 <p className="muted">
-                  Your completed and active sessions from the last seven days.
+                  Up to 1,000 sessions: unfinished sessions first, then
+                  completed sessions overlapping the last seven days.
                 </p>
                 {!data?.sessions.length && (
                   <p className="empty">Your first session starts here.</p>

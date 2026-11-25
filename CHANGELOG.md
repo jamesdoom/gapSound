@@ -83,3 +83,9 @@
 
 - Added persistent review topics and local due dates in Daily Training, rescheduling, completion history and pagination.
 - New version-2 daily briefings capture pending due/overdue reviews; older snapshots remain readable and immutable.
+
+### Training recovery and day rollover
+
+- Preserved unfinished sessions in the visible history regardless of age; added validated actual-end recovery and protection against stale session controls.
+- Reload daily objectives at local midnight and refresh workspace on focus/visibility return, preserving previous-day plans and active sessions.
+- Clip completed totals to the rolling seven-day window independently of history pagination limits.

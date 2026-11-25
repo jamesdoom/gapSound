@@ -2,47 +2,55 @@
 
 ## Status
 
-Phase 1 remains in progress. Latest completed update: manually scheduled due reviews (partial GS-007) with version-2 briefing integration. GS-005 persisted deterministic daily briefings remains complete. GS-004 intelligence discovery is also complete. GS-002 process-restart/manual assistive review, GS-003 source policy review, GS-006 vulnerability research, remaining GS-007 learning/notebook completion and GS-008 release acceptance remain open. No Phase 2 implementation is authorized.
+Phase 1 remains in progress. Latest completed update: training session recovery and local day rollover (partial GS-007). GS-004 intelligence discovery and GS-005 persistent deterministic briefings are complete. Scheduled due reviews are also implemented. Remaining work includes configurable objectives/notebook workflows (GS-007), richer vulnerability research (GS-006), source policy review (GS-003), broader full application restart/manual assistive coverage (GS-002) and release acceptance (GS-008). No Phase 2 work is authorized.
 
-The app remains local-first and single-user. The existing Vercel deployment is protected by Vercel Authentication for all deployments but remains unsupported for application use until storage/access architecture is adapted. No Vercel settings, paid services or AI providers changed this session. Git pushes may trigger the user's existing protected build integration.
+The app remains local-first, single-user and bound to 127.0.0.1:3000. The existing protected Vercel deployment remains unsupported for application use until storage/access architecture is adapted. No hosting settings, paid services, AI providers or authentication changed. Git pushes may trigger the user's existing protected build integration.
 
 ## Latest behavior
 
-Command Center now generates saved daily snapshots through a dedicated same-origin API. Snapshots include recent source-linked news, KEV additions, watchlist/bookmark relevance, source freshness, an investigation prompt, learning/assessment, daily objectives and recently completed objective review prompts. They do not depend on article search/filter/page state. There are no AI calls or external requests during generation.
+Unfinished sessions remain visible even when older than seven days or when the bounded history list has more than 1,000 candidates. Start remains idempotent under the existing one-active-session database index. Stop/recovery now requires the matching active UUID, protecting a replacement session from stale controls.
 
-Regeneration archives the previous version and inserts its replacement in one transaction. One unarchived version is allowed per local calendar day. Archive preserves the entire snapshot. History is paginated and survives article refreshes/retention. Generation validates the current date in the supplied IANA time zone; timestamps are stored in UTC. Source status describes generation time, not a live incident assessment. Recorded-objective prompts remain suggestions. Separately, Daily Training now supports manually scheduled due reviews, rescheduling unfinished records and retained UTC completion history. Schedule a new record for another attempt. New briefing snapshots capture up to 100 pending due/overdue reviews and their total count; existing version-1 snapshots explicitly report that scheduled reviews were not captured. No automatic spaced repetition or notifications. See docs/DAILY_BRIEFINGS.md for all selection rules and limits.
+Daily Training offers **Recover a forgotten session**: enter the actual local end time. The browser converts it to UTC; the server checks that it lies between the original start and server time, then completes that same record transactionally. Original start/history are preserved. Closing the browser does not stop a session, and elapsed time includes time away until the user finishes or recovers it. Completed sessions cannot be edited in this update.
 
-Migration 0006 added scheduled_reviews and its pending/due index; migration 0005 previously added daily_briefings. Both applied successfully locally; no user briefing was generated or personal records removed by tests. Browser and database tests use isolated fixtures.
+Daily objectives reload when the browser's local calendar day changes, with clock checks every second. Workspace also refreshes on focus/visibility return. Prior-day objectives are retained and hidden while the new day's data loads; they are not copied or deleted. Unsubmitted objective text is preserved. Scheduled review due labels follow the same local day. Midnight does not split, stop or restart an active session.
+
+Completed study minutes now aggregate all overlaps with the rolling last 168 hours, clip the window boundary and exclude unfinished time. This total does not depend on the 1,000-item history display cap. History prioritizes unfinished sessions. History and total are separate reads, so a concurrent completion may require another refresh. See docs/TRAINING.md.
+
+No schema migration was required; migration 0006 from the previous update remains current. Tests used isolated fixtures and did not create personal study records or change user data. No live feed calls were made.
 
 ## Verification actually executed
 
-- 129 automated tests across 18 Vitest files passed.
-- Type checking, lint (no warnings), and production build passed.
-- All 24 Chrome browser tests passed on isolated loopback port 3100, including generation/reload/filter independence, versioning/archive retrieval, assessment reveal, populated mobile accessibility, and existing workflows.
-- Database tests verified snapshot immutability, empty data, relevance/freshness, local date validation, archive/history paging, close/reopen persistence, unsafe reference validation and full rollback after an injected regeneration failure.
-- Review tests cover due/upcoming/completed selection, rescheduling, protected completion history, invalid dates/identifiers, pagination, database close/reopen persistence and immutable/version-1-compatible briefing snapshots. The final request-cancellation improvement passed a targeted Chrome workflow rerun; typecheck/lint/build also passed afterward.
-- No live feed calls were made in this update. Previous normalization verification accepted 35 entries from three approved RSS sources without database writes.
+- 133 automated tests across 19 Vitest files passed.
+- Type checking, lint (no warnings), production build and Git whitespace checks passed.
+- All 26 Chrome browser tests passed against the final build on isolated loopback port 3100.
+- New browser coverage verifies reload recovery with an exact local end time, populated recovery-form mobile accessibility, and simulated local midnight in America/New_York: prior-day objectives retained, new objectives assigned to the new day, review labels updated, same active session retained.
+- New service tests cover old active sessions, duplicate starts, invalid/future ends, stale UUID protection, seven-day clipping, unfinished-time exclusion and totals unaffected by history limits.
+- A restart test launches separate Node backend processes against one temporary SQLite file, verifies the same active record survives exits/restarts, completes it through recovery and verifies the result in a later process. It also reads training alongside article discovery to cover transaction contention. Each child is bounded to ten seconds; that test has a 30-second limit because Windows process launches exceeded Vitest's default five seconds during the first run.
+- Browser verification caught concurrent training/article transaction contention in workspace loading. The read-only training path no longer opens an unnecessary transaction; completion remains transactional. Targeted checks and the full browser suite passed after correction.
 
-Prior hosted CI repair was verified at https://github.com/jamesdoom/gapSound/actions/runs/45652241919 with no annotations. CI uses SHA-pinned Node 24 actions while application checks run on Node 22; manual workflow dispatch and seven-day failure diagnostics are available. Current update checks above were executed locally; no new hosted result is claimed.
+Prior hosted CI repair was verified at https://github.com/jamesdoom/gapSound/actions/runs/45652241919 with no annotations. CI uses SHA-pinned Node 24 actions while application checks run on Node 22. Current update checks above ran locally; no new hosted CI result is claimed.
+
+## Persistent briefing/review behavior
+
+New version-2 briefings capture up to 100 unfinished due/overdue reviews plus their total count. Changes appear only after regeneration; older version-1 snapshots remain readable and explicitly say scheduled reviews were not captured. Regeneration/archive/history retain prior contents. Completed review records cannot be rescheduled; create a new record for another attempt. No automatic spaced repetition or notifications. See docs/DAILY_BRIEFINGS.md.
 
 ## Remaining limitations and next actions
 
-- Complete source terms/rate-policy review and full application process-restart checks.
-- Finish richer vulnerability research, notebook editing and training workflows.
-- Complete backup/restore, secret scanning and release security review.
-- Manual screen-reader/zoom/forced-colors checks remain; axe passing is not WCAG certification.
-- Single-server refresh coordination has no cross-process lock or retry jitter.
-- Notes display Markdown as safe plain text; CVE/notes results cap at 100.
-- Briefing history is retained indefinitely; private objectives may appear in snapshots and backups. No encryption at rest, undo or secure erasure is provided.
+- Complete configurable training objectives and notebook editing, tag organization, export pagination and safe Markdown rendering.
+- Expand authoritative CVE research, severity/vendor filtering and saved vulnerabilities.
+- Complete publisher terms/rate-policy review and full application restart coverage for the remaining critical workflows; the backend restart test above does not launch/restart the whole Next.js server.
+- Complete backup/restore verification, secret scanning and final dependency/security review.
+- Manual screen-reader, zoom and forced-colors checks remain; axe passing is not WCAG certification.
+- Notes still display Markdown as plain text; CVE/notes results cap at 100. Feed refresh lacks a cross-process lock/retry jitter.
+- Private study text may appear in retained briefing snapshots and backups. No encryption at rest, undo or secure erasure is provided. Recovery of already completed sessions is not supported.
 
 ## Run and verify
 
-Normal npm works in the user's VS Code terminal. Stop and restart an existing dev server after migration:
+Restart the dev server to load this update:
 
-    npm run db:migrate
     npm run dev
 
-Open http://127.0.0.1:3000 and use Daily Training → Scheduled reviews. Choose Generate today’s briefing in Command Center to capture currently due reviews. Refresh sources separately before regeneration if needed. Verification:
+Open http://127.0.0.1:3000 → Daily Training. Start/stop a session or recover an unfinished one with its actual end time. No new migration is needed for this update. General checks:
 
     npm test
     npm run typecheck
@@ -50,6 +58,6 @@ Open http://127.0.0.1:3000 and use Daily Training → Scheduled reviews. Choose 
     npm run build
     npm run test:e2e
 
-Browser tests use port 3100 and a new temporary database; they can run alongside local development on 3000. Install Playwright Chromium or set PLAYWRIGHT_CHANNEL=chrome. The restricted agent environment may need the bundled npm CLI path; this is not a broken user installation. No global configuration changes are required.
+Browser tests use a new temporary database on port 3100 and can run alongside the user's development server on 3000. Install Playwright Chromium or set PLAYWRIGHT_CHANNEL=chrome. Normal npm works in the user's VS Code terminal; only the restricted agent shell needs the bundled npm CLI fallback. No global configuration changes are required.
 
-Learning question: why should an archived briefing retain source freshness at generation instead of showing only the source's latest refresh timestamp?
+Learning question: why should an unfinished session survive midnight while its completed duration is clipped to the rolling reporting window?

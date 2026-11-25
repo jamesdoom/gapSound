@@ -1,0 +1,11 @@
+# Training sessions and day rollover
+
+Daily objectives belong to the browser's local calendar day. An open page updates its clock every second, reloads workspace data when that day changes, and refreshes on window focus or returning to a visible tab. Previous-day objectives remain in SQLite; they are neither copied nor deleted at midnight. Until the new day's data arrives, previous-day objectives are hidden. Unsubmitted objective text is preserved.
+
+Only one unfinished session is allowed by the database. Its original UTC start time survives page reloads and server/process restarts, including sessions older than seven days. Start requests do not replace an existing session. Midnight does not stop, split or restart a session. Closing the browser does not automatically stop it.
+
+Use **Stop session** to finish at the server's current time. If you forgot to stop, open **Recover a forgotten session**, enter the actual end in local time, and choose **Finish recovered session**. The browser converts the chosen time to UTC. The server requires the matching active UUID and an end between the original start and server time. Stale controls cannot stop a different session. Recovery preserves the start and records the selected end; it does not invent activity or delete history. Completed records cannot be edited in this update.
+
+Elapsed time includes time away while the timer was unfinished; the app cannot infer when you stopped studying. Only completed duration counts toward the weekly goal. The last-seven-days total uses a rolling 168-hour UTC window, clips sessions crossing the window boundary and aggregates all completed overlaps independently of the 1,000-item history display limit. Unfinished sessions are prioritized in that list. Totals round down once to whole minutes. The history and total are separate reads; a concurrent completion can appear on the next refresh.
+
+No schema migration is required for recovery/rollover. Routine tests use isolated data and make no live feed requests. Restart verification launches separate Node backend processes against the same temporary SQLite file; browser tests verify reload recovery and a simulated midnight in America/New_York. Full application restart coverage for every other module and manual assistive-technology review remain separate acceptance tasks.
