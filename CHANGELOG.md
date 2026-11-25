@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.1 — 2026-11-25
+
+- Added isolated Playwright coverage for article workflows, CVE research, training, notes, mobile preferences and local API security.
+- Added React Testing Library loading/error coverage, configurable data directory and temporary test databases.
+- Extended CI to verify browser workflows against the production build.
+
 ## 0.1.0 — 2026-11-25
 
 - Initialized local Next.js/TypeScript/Tailwind application and GapSound identity.

@@ -108,13 +108,11 @@ export async function POST(request: Request) {
           .where(eq(articles.id, input.id));
         break;
       case "task":
-        await db
-          .insert(tasks)
-          .values({
-            id: crypto.randomUUID(),
-            title: input.title,
-            day: input.day,
-          });
+        await db.insert(tasks).values({
+          id: crypto.randomUUID(),
+          title: input.title,
+          day: input.day,
+        });
         break;
       case "toggle-task":
         await db
@@ -138,15 +136,13 @@ export async function POST(request: Request) {
           .where(isNull(sessions.endedAt));
         break;
       case "note":
-        await db
-          .insert(notes)
-          .values({
-            id: crypto.randomUUID(),
-            title: input.title,
-            body: input.body,
-            tags: input.tags,
-            createdAt: new Date().toISOString(),
-          });
+        await db.insert(notes).values({
+          id: crypto.randomUUID(),
+          title: input.title,
+          body: input.body,
+          tags: input.tags,
+          createdAt: new Date().toISOString(),
+        });
         break;
       case "settings":
         await db

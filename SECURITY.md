@@ -19,4 +19,5 @@ Security headers include nosniff, DENY framing, no-referrer, restrictive permiss
 
 Feed URLs are configured in code, never supplied by user input. Article links are not fetched by the server. Publishers receive refresh requests; users can choose whether to open original articles in their browser. Notes are never sent to any AI provider.
 
-Tests cover local origin/host rules, oversized JSON, unsafe link schemes, malicious XML declarations, normalization and database constraints. Passing tests is not a security certification. Dependency auditing is part of CI; dedicated secret scanning, browser regression testing, DNS pinning and backup/restore validation are outstanding. Public hosting needs reviewed authentication, authorization, sessions, HTTPS and deployment controls before implementation.
+Tests cover local origin/host rules, oversized JSON, unsafe link schemes, malicious XML declarations, normalization and database constraints. Browser tests additionally verify literal malicious note markup and API cross-origin/rebinding rejection. Passing tests is not a security certification. Dependency auditing is part of CI; dedicated secret scanning, full accessibility review, DNS pinning and backup/restore validation are outstanding. Public hosting needs reviewed authentication, authorization, sessions, HTTPS and deployment controls before implementation.
+

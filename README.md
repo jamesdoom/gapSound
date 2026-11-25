@@ -51,6 +51,23 @@ Stop GapSound before backup or restore. Copy the entire `data` directory to a pr
 - Notes currently display Markdown as safe plain text. Editing/deleting notes is pending.
 - Local workspace has no authentication, encryption at rest or public hosting support. Browser tabs may share the same database. Do not place sensitive incident data here.
 - Source allowlisting is not DNS pinning. See SECURITY.md for residual SSRF and local-process risks.
-- Automated browser and component testing remain pending; unit and database integration tests are included.
+- Browser tests cover persisted workflows, malicious note content, mobile overflow and API security boundaries. Full accessibility review and process-restart persistence tests remain pending.
 
 See HANDOFF.md for current results and next work. No screenshots are included until browser review is completed.
+
+## Browser regression tests
+
+```powershell
+npm run build
+npx playwright install chromium
+npm run test:e2e
+```
+
+Tests start their own production server on port 3000; stop any existing GapSound server first. Each invocation uses a new temporary database and labeled synthetic fixtures, with no public feed requests. Test directories are retained for debugging; remove only known `gapsound-e2e-*` folders from your OS temporary directory when no tests are running. To use installed Chrome on Windows:
+
+```powershell
+$env:PLAYWRIGHT_CHANNEL='chrome'
+npm run test:e2e
+```
+
+`GAPSOUND_DATA_DIR` can override the normal data directory. Browser tests always override it with a fresh temporary directory.
