@@ -942,3 +942,29 @@ footer {
     display: none;
   }
 }
+
+.date-filter {
+  display: grid;
+  gap: 4px;
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+.date-filter input {
+  font-size: 0.875rem;
+  max-width: 100%;
+}
+.filters {
+  align-items: end;
+}
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 20px;
+}
+.pagination span {
+  color: var(--muted);
+  font-size: 0.875rem;
+}

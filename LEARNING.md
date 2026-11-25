@@ -1,5 +1,13 @@
 # Security learning notes
 
+## Bounded browsing with explicit date semantics
+
+`src/lib/intelligence-query.ts` validates publication dates, range order and page numbers before database work. `src/services/intelligence.ts` uses parameterized Drizzle conditions and a 25-record page size, with a maximum requested page of 10,000 to bound offsets. Count and page results share a read transaction. Sorting by publication timestamp then stable ID avoids duplicate/missing records across ties in an unchanged dataset. Concurrent refreshes can still move records between offset pages; cursor pagination is a future option.
+
+Date filters use inclusive UTC days and exclude unknown publication dates, rather than substituting ingestion dates. The UI names this distinction. `tests/intelligence.test.ts` covers 103 records without duplication, UTC boundaries, unknown dates, combined filters, page clamping and malformed inputs. Browser tests cover paging beyond 100 and resetting filters. SQL parameterization is maintained; tests do not establish security certification.
+
+**Question:** Why can sorting by a non-unique publication timestamp alone make pagination unstable?
+
 ## Action runtimes and repeatable CI failures
 
 The Node version used inside a GitHub action is separate from the Node version setup-node installs for application commands. CI now pins official checkout, setup-node and upload-artifact releases that declare Node 24 runtimes, while the app continues testing on Node 22. Immutable commit references reduce exposure to changed release tags. Read-only repository permissions remain in place, and failure artifacts contain only isolated test fixtures.

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.7 — 2026-11-25
+
+- Added 25-record article pagination, matching-result counts, deterministic date/ID ordering and recovery when a page becomes empty after filtering or removal.
+- Added inclusive UTC publication-date filters and Clear filters; changing search/source/category/bookmark/date filters returns to page one.
+- Validated date ranges and page bounds server-side; added database and browser tests covering more than 100 records, missing dates and invalid inputs.
+
 ## 0.1.6 — 2026-11-25
 
 - Fixed a Settings remount race that discarded retention cleanup confirmation/results when initial preferences finished loading.

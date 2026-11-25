@@ -33,6 +33,19 @@ for (const [id, saved] of [
     ],
   });
 }
+await db.execute(
+  "INSERT INTO sources(id,name,url) VALUES ('paging','Demonstration pagination fixture','https://example.com/pages')",
+);
+for (let i = 0; i < 103; i++)
+  await db.execute({
+    sql: "INSERT INTO articles(id,source_id,title,url,summary,category,ingested_at,published_at) VALUES (?,'paging',?,?,'Synthetic pagination test','Threat intelligence',?,NULL)",
+    args: [
+      "paging-" + String(i).padStart(3, "0"),
+      "Demonstration paging " + String(i).padStart(3, "0"),
+      "https://example.com/pages/" + i,
+      new Date().toISOString(),
+    ],
+  });
 db.close();
 const server = spawn(
   process.execPath,

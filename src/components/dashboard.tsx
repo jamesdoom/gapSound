@@ -67,6 +67,9 @@ export function Dashboard() {
   const [source, setSource] = useState("");
   const [category, setCategory] = useState("");
   const [saved, setSaved] = useState(false);
+  const [articlePage, setArticlePage] = useState(1);
+  const [publishedFrom, setPublishedFrom] = useState("");
+  const [publishedTo, setPublishedTo] = useState("");
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -77,6 +80,7 @@ export function Dashboard() {
   const loadVersion = useRef(0);
   const load = useCallback(async () => {
     const version = ++loadVersion.current;
+    setLoading(true);
     try {
       const params = new URLSearchParams({
         q: query,
@@ -84,6 +88,9 @@ export function Dashboard() {
         category,
         saved: String(saved),
         day: localDay(),
+        page: String(articlePage),
+        from: publishedFrom,
+        to: publishedTo,
       });
       const response = await fetch(`/api/workspace?${params}`);
       const body = await response.json();
@@ -98,7 +105,7 @@ export function Dashboard() {
     } finally {
       if (version === loadVersion.current) setLoading(false);
     }
-  }, [query, source, category, saved]);
+  }, [query, source, category, saved, articlePage, publishedFrom, publishedTo]);
   const mutate = useCallback(
     async (body: Record<string, unknown>) => {
       setPending(true);
@@ -183,6 +190,9 @@ export function Dashboard() {
     setSource("");
     setCategory("");
     setSaved(false);
+    setArticlePage(1);
+    setPublishedFrom("");
+    setPublishedTo("");
     setAnnouncement("");
   };
   useEffect(() => {
@@ -201,7 +211,7 @@ export function Dashboard() {
     });
   }
   const feedPanel = (
-    <section className="panel feed-panel">
+    <section className="panel feed-panel" aria-busy={loading}>
       <div className="panel-heading">
         <div>
           <span className="eyebrow">INTELLIGENCE FEED</span>
@@ -217,7 +227,10 @@ export function Dashboard() {
         <select
           aria-label="Filter source"
           value={source}
-          onChange={(e) => setSource(e.target.value)}
+          onChange={(e) => {
+            setSource(e.target.value);
+            setArticlePage(1);
+          }}
         >
           <option value="">All sources</option>
           {data?.sources
@@ -231,7 +244,10 @@ export function Dashboard() {
         <select
           aria-label="Filter category"
           value={category}
-          onChange={(e) => setCategory(e.target.value)}
+          onChange={(e) => {
+            setCategory(e.target.value);
+            setArticlePage(1);
+          }}
         >
           <option value="">All categories</option>
           {[
@@ -249,11 +265,65 @@ export function Dashboard() {
         <button
           aria-pressed={saved}
           className={saved ? "selected" : ""}
-          onClick={() => setSaved(!saved)}
+          onClick={() => {
+            setSaved(!saved);
+            setArticlePage(1);
+          }}
         >
           <Bookmark size={15} /> Saved
         </button>
+        <label className="date-filter">
+          Published from (UTC)
+          <input
+            type="date"
+            value={publishedFrom}
+            max={publishedTo || undefined}
+            onChange={(e) => {
+              setPublishedFrom(e.target.value);
+              setArticlePage(1);
+            }}
+          />
+        </label>
+        <label className="date-filter">
+          Published through (UTC)
+          <input
+            type="date"
+            value={publishedTo}
+            min={publishedFrom || undefined}
+            onChange={(e) => {
+              setPublishedTo(e.target.value);
+              setArticlePage(1);
+            }}
+          />
+        </label>
+        <button
+          disabled={
+            !source &&
+            !category &&
+            !saved &&
+            !publishedFrom &&
+            !publishedTo &&
+            !query
+          }
+          onClick={() => {
+            setSource("");
+            setCategory("");
+            setSaved(false);
+            setPublishedFrom("");
+            setPublishedTo("");
+            setQuery("");
+            setArticlePage(1);
+          }}
+        >
+          Clear filters
+        </button>
       </div>
+      {(publishedFrom || publishedTo) && (
+        <p className="small muted">
+          Filters use publication dates in UTC, including both selected days.
+          Articles without publication dates are excluded.
+        </p>
+      )}
       {!data?.items.length ? (
         <div className="empty">
           <Radio />
@@ -331,6 +401,37 @@ export function Dashboard() {
             </div>
           </article>
         ))
+      )}
+      {data?.pagination && (
+        <nav className="pagination" aria-label="Article pages">
+          <button
+            disabled={loading || pending || data.pagination.page <= 1}
+            onClick={() => {
+              setLoading(true);
+              setArticlePage(data.pagination.page - 1);
+            }}
+          >
+            Previous articles
+          </button>
+          <span role="status" aria-live="polite">
+            {data.pagination.from}–{data.pagination.to} of{" "}
+            {data.pagination.total} matching articles · Page{" "}
+            {data.pagination.page} of {data.pagination.totalPages}
+          </span>
+          <button
+            disabled={
+              loading ||
+              pending ||
+              data.pagination.page >= data.pagination.totalPages
+            }
+            onClick={() => {
+              setLoading(true);
+              setArticlePage(data.pagination.page + 1);
+            }}
+          >
+            Next articles
+          </button>
+        </nav>
       )}
     </section>
   );
@@ -514,7 +615,10 @@ export function Dashboard() {
               placeholder="Search intelligence, CVEs, notes…"
               value={query}
               maxLength={200}
-              onChange={(e) => setQuery(e.target.value)}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                setArticlePage(1);
+              }}
             />
             <kbd>Ctrl K</kbd>
           </div>

@@ -6,6 +6,7 @@ import { articles, notes, sessions, settings, tasks } from "@/db/schema";
 import { boundedJson, validateRequest } from "@/lib/security";
 import { workspace } from "@/services/workspace";
 import { refreshFeeds } from "@/services/feeds";
+import { intelligenceQuery } from "@/lib/intelligence-query";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 const actionSchema = z.discriminatedUnion("action", [
@@ -51,6 +52,20 @@ export async function GET(request: Request) {
   }
   const params = new URL(request.url).searchParams;
   const day = z.iso.date().safeParse(params.get("day"));
+  const browse = intelligenceQuery.safeParse({
+    query: (params.get("q") ?? "").slice(0, 200),
+    source: (params.get("source") ?? "").slice(0, 100),
+    category: (params.get("category") ?? "").slice(0, 100),
+    saved: params.get("saved") === "true",
+    page: params.get("page") ?? 1,
+    from: params.get("from") || undefined,
+    to: params.get("to") || undefined,
+  });
+  if (!browse.success)
+    return NextResponse.json(
+      { error: "Invalid page or publication date range" },
+      { status: 400 },
+    );
   try {
     return NextResponse.json(
       await workspace(
@@ -59,6 +74,7 @@ export async function GET(request: Request) {
         (params.get("category") ?? "").slice(0, 100),
         params.get("saved") === "true",
         day.success ? day.data : new Date().toISOString().slice(0, 10),
+        { page: browse.data.page, from: browse.data.from, to: browse.data.to },
       ),
       { headers: { "Cache-Control": "no-store" } },
     );

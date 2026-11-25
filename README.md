@@ -49,7 +49,8 @@ Stop GapSound before backup or restore. Copy the entire `data` directory to a pr
 - Keep port 3000 and localhost defaults. Host/origin checks intentionally reject other ports/hosts.
 - Source failures show a retry-eligible timestamp and failure count in Command Center. Manual refresh respects the same waiting period; do not bypass source access restrictions.
 - Feed availability and terms can change. See docs/INTEGRATIONS.md for verification status.
-- Search results cap at 100; pagination/date filters/watchlists and richer briefings are pending.
+- Article browsing uses 25-record pages with matching counts and inclusive UTC publication-date filters. Unknown publication dates are excluded when a date filter is active. Search/source/category/saved/date changes return to page one. Page requests are bounded at 10,000 (250,000 accessible matches); cursor pagination remains a future scalability improvement.
+- CVE and note results still cap at 100. Watchlists and richer briefings remain pending.
 - Notes currently display Markdown as safe plain text. Editing/deleting notes is pending.
 - Local workspace has no authentication, encryption at rest or public hosting support. Browser tabs may share the same database. Do not place sensitive incident data here.
 - Source fetching validates and pins DNS answers to public addresses. See SECURITY.md for remaining platform and local-process risks.

@@ -39,3 +39,7 @@ Migration 0002 adds source failure counts and retry-eligible timestamps without 
 ## Manual metadata retention
 
 Settings uses a dedicated same-origin POST endpoint for preview and confirmed cleanup. A fixed 90-day ingestion-age rule protects recently imported metadata regardless of source publication time. Each request removes at most 400 previewed IDs, rechecking current bookmark state and cutoff; preview cutoffs expire after 15 minutes. Migration 0003 adds a composite index for eligibility queries. No automatic cleanup or SQLite VACUUM is run, and personal records and KEV catalog records are excluded. The preview is not an authorization token; exact local Host/Origin validation remains the access boundary.
+
+## Article browsing
+
+The workspace delegates article queries to src/services/intelligence.ts. A shared Zod query schema validates dates and page bounds; SQL remains parameterized. Matching counts and 25-row pages are read together in a transaction. Results use descending publication date and ID, with unknown dates last when unfiltered. Inclusive UTC bounds are applied to publication time only. Pages beyond the remaining result set clamp to its last page. Pagination affects article browsing only; CVE/notes retain their current 100-row bounds. Offset paging is capped at 10,000 pages; large datasets and concurrent ingestion would benefit from keyset pagination later.

@@ -202,3 +202,61 @@ test("retention previews, requires confirmation, removes only expired unsaved ar
   });
   expect(invalid.status()).toBe(400);
 });
+
+test("article paging reaches records beyond 100 and date filters reset the page", async ({
+  page,
+  request,
+}) => {
+  await page.goto("/");
+  await page
+    .getByRole("navigation")
+    .getByRole("button", { name: "Threat Intelligence", exact: true })
+    .click();
+  await page.getByLabel("Filter source").selectOption("paging");
+  await expect(page.getByText(/1–25 of 103 matching articles/)).toBeVisible();
+  for (let i = 2; i <= 5; i++) {
+    await page
+      .getByRole("button", { name: "Next articles", exact: true })
+      .click();
+    await expect(
+      page.getByText(new RegExp("Page " + i + " of 5")),
+    ).toBeVisible();
+  }
+  await expect(
+    page.getByRole("link", { name: "Demonstration paging 000", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Next articles", exact: true }),
+  ).toBeDisabled();
+  await page
+    .getByLabel("Published from (UTC)", { exact: true })
+    .fill("2026-11-25");
+  await expect(
+    page.getByText(/0–0 of 0 matching articles.*Page 1 of 1/),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Clear filters", exact: true })
+    .click();
+  await page
+    .getByLabel("Published from (UTC)", { exact: true })
+    .fill("2026-11-25");
+  await page
+    .getByLabel("Published through (UTC)", { exact: true })
+    .fill("2026-11-25");
+  await expect(
+    page.getByRole("link", {
+      name: "Demonstration: phishing investigation",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Demonstration paging 000", exact: true }),
+  ).toHaveCount(0);
+  for (const query of [
+    "page=-1",
+    "page=10001",
+    "from=not-a-date",
+    "from=2026-11-26&to=2026-11-25",
+  ])
+    expect((await request.get("/api/workspace?" + query)).status()).toBe(400);
+});

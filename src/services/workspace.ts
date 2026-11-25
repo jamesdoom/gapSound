@@ -1,4 +1,5 @@
-import { and, desc, eq, gte, like, or, sql } from "drizzle-orm";
+import { desc, eq, gte, like, or, sql } from "drizzle-orm";
+import { listArticles } from "./intelligence";
 import { db } from "../db";
 import {
   articles,
@@ -15,20 +16,10 @@ export async function workspace(
   category: string,
   saved: boolean,
   day: string,
+  browsing: { page?: number; from?: string; to?: string } = {},
 ) {
-  const filters = [];
-  if (query)
-    filters.push(
-      or(
-        like(articles.title, `%${query}%`),
-        like(articles.summary, `%${query}%`),
-      )!,
-    );
-  if (source) filters.push(eq(articles.sourceId, source));
-  if (category) filters.push(eq(articles.category, category));
-  if (saved) filters.push(eq(articles.bookmarked, true));
   const [
-    items,
+    articlePage,
     sourceList,
     kevs,
     checklist,
@@ -37,12 +28,7 @@ export async function workspace(
     preferences,
     counts,
   ] = await Promise.all([
-    db
-      .select()
-      .from(articles)
-      .where(and(...filters))
-      .orderBy(desc(articles.publishedAt))
-      .limit(100),
+    listArticles({ query, source, category, saved, ...browsing }),
     db.select().from(sources),
     db
       .select()
@@ -96,7 +82,8 @@ export async function workspace(
     .select({ total: sql<number>`count(*)` })
     .from(vulnerabilities);
   return {
-    items,
+    items: articlePage.items,
+    pagination: articlePage.pagination,
     sources: sourceList,
     kevs,
     checklist,
