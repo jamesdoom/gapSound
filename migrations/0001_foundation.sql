@@ -1,0 +1,13 @@
+CREATE TABLE IF NOT EXISTS sources (id TEXT PRIMARY KEY, name TEXT NOT NULL, url TEXT NOT NULL, last_success TEXT, last_attempt TEXT, error TEXT);
+CREATE TABLE IF NOT EXISTS articles (id TEXT PRIMARY KEY, source_id TEXT NOT NULL REFERENCES sources(id), title TEXT NOT NULL, url TEXT NOT NULL UNIQUE, summary TEXT NOT NULL, category TEXT NOT NULL, published_at TEXT, ingested_at TEXT NOT NULL, bookmarked INTEGER NOT NULL DEFAULT 0, read INTEGER NOT NULL DEFAULT 0);
+CREATE INDEX IF NOT EXISTS articles_published ON articles(published_at);
+CREATE INDEX IF NOT EXISTS articles_source ON articles(source_id);
+CREATE TABLE IF NOT EXISTS vulnerabilities (id TEXT PRIMARY KEY, vendor TEXT NOT NULL, product TEXT NOT NULL, name TEXT NOT NULL, description TEXT NOT NULL, action TEXT NOT NULL, added_at TEXT NOT NULL, due_date TEXT NOT NULL, ingested_at TEXT NOT NULL);
+CREATE INDEX IF NOT EXISTS vulnerabilities_added ON vulnerabilities(added_at);
+CREATE TABLE IF NOT EXISTS tasks (id TEXT PRIMARY KEY, title TEXT NOT NULL, done INTEGER NOT NULL DEFAULT 0, day TEXT NOT NULL);
+CREATE INDEX IF NOT EXISTS tasks_day ON tasks(day);
+CREATE TABLE IF NOT EXISTS sessions (id TEXT PRIMARY KEY, started_at TEXT NOT NULL, ended_at TEXT);
+CREATE UNIQUE INDEX IF NOT EXISTS one_active_session ON sessions((1)) WHERE ended_at IS NULL;
+CREATE TABLE IF NOT EXISTS notes (id TEXT PRIMARY KEY, title TEXT NOT NULL, body TEXT NOT NULL, tags TEXT NOT NULL, created_at TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS settings (id TEXT PRIMARY KEY, weekly_hours INTEGER NOT NULL DEFAULT 15 CHECK(weekly_hours BETWEEN 1 AND 100), refresh_minutes INTEGER NOT NULL DEFAULT 60 CHECK(refresh_minutes BETWEEN 15 AND 1440));
+INSERT OR IGNORE INTO settings(id) VALUES ('local');

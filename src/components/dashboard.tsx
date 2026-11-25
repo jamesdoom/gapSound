@@ -1,0 +1,883 @@
+"use client";
+import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  BookOpen,
+  Bookmark,
+  Check,
+  ChevronRight,
+  Clock3,
+  FileText,
+  LayoutDashboard,
+  Menu,
+  Play,
+  Radio,
+  RefreshCw,
+  Search,
+  Settings,
+  Shield,
+  ShieldAlert,
+  Square,
+  Target,
+  Wifi,
+  X,
+} from "lucide-react";
+import { brand } from "@/lib/brand";
+import type { workspace } from "@/services/workspace";
+type Data = Awaited<ReturnType<typeof workspace>>;
+const nav = [
+  { title: "Command Center", icon: LayoutDashboard },
+  { title: "Threat Intelligence", icon: Radio },
+  { title: "CVE Watchtower", icon: ShieldAlert },
+  { title: "Daily Training", icon: Target },
+  { title: "Research Notebook", icon: FileText },
+  { title: "Settings", icon: Settings },
+];
+const planned = [
+  "ThreatLens",
+  "Web Security Academy",
+  "SOC Simulator",
+  "VulnLab",
+  "PhishGuard",
+  "LLM Sentinel",
+  "CyberRecall",
+  "Analytics",
+];
+function localDay() {
+  const date = new Date();
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+function stamp(value: string | null) {
+  return value ? new Date(value).toLocaleString() : "Not available";
+}
+function download(name: string, content: string, type: string) {
+  const url = URL.createObjectURL(new Blob([content], { type }));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = name;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+export function Dashboard() {
+  const [page, setPage] = useState("Command Center");
+  const [collapsed, setCollapsed] = useState(false);
+  const [data, setData] = useState<Data>();
+  const [query, setQuery] = useState("");
+  const [source, setSource] = useState("");
+  const [category, setCategory] = useState("");
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState("");
+  const [pending, setPending] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [now, setNow] = useState<Date>();
+  const search = useRef<HTMLInputElement>(null);
+  const loadVersion = useRef(0);
+  const load = useCallback(async () => {
+    const version = ++loadVersion.current;
+    try {
+      const params = new URLSearchParams({
+        q: query,
+        source,
+        category,
+        saved: String(saved),
+        day: localDay(),
+      });
+      const response = await fetch(`/api/workspace?${params}`);
+      const body = await response.json();
+      if (!response.ok) throw new Error(body.error);
+      if (version === loadVersion.current) {
+        setData(body);
+        setError("");
+      }
+    } catch (e) {
+      if (version === loadVersion.current)
+        setError(e instanceof Error ? e.message : "Could not load workspace");
+    } finally {
+      if (version === loadVersion.current) setLoading(false);
+    }
+  }, [query, source, category, saved]);
+  const mutate = useCallback(
+    async (body: Record<string, unknown>) => {
+      setPending(true);
+      setError("");
+      try {
+        const response = await fetch("/api/workspace", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error);
+        await load();
+        return true;
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Action failed");
+        return false;
+      } finally {
+        setPending(false);
+      }
+    },
+    [load],
+  );
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      void load();
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [load]);
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+  useEffect(() => {
+    function shortcut(e: KeyboardEvent) {
+      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+        e.preventDefault();
+        search.current?.focus();
+      }
+    }
+    window.addEventListener("keydown", shortcut);
+    return () => window.removeEventListener("keydown", shortcut);
+  }, []);
+  const interval = data?.settings?.refreshMinutes ?? 60;
+  useEffect(() => {
+    const timer = setInterval(() => {
+      void mutate({ action: "refresh" });
+    }, interval * 60000);
+    return () => clearInterval(timer);
+  }, [interval, mutate]);
+  const active = data?.sessions.find((s) => !s.endedAt);
+  const studyMinutes = Math.floor(
+    (data?.sessions.reduce(
+      (sum, s) =>
+        sum + (s.endedAt ? Date.parse(s.endedAt) - Date.parse(s.startedAt) : 0),
+      0,
+    ) ?? 0) / 60000,
+  );
+  const goal = (data?.settings?.weeklyHours ?? 15) * 60;
+  const health =
+    data?.sources.filter(
+      (s) =>
+        s.lastSuccess &&
+        !s.error &&
+        (now?.getTime() ?? 0) - Date.parse(s.lastSuccess) < interval * 120000,
+    ).length ?? 0;
+  const changePage = (title: string) => {
+    setPage(title);
+    setQuery("");
+    setSource("");
+    setCategory("");
+    setSaved(false);
+  };
+  function noteForm(form: HTMLFormElement) {
+    const values = new FormData(form);
+    void mutate({
+      action: "note",
+      title: values.get("title"),
+      body: values.get("body"),
+      tags: values.get("tags"),
+    }).then((ok) => {
+      if (ok) form.reset();
+    });
+  }
+  const feedPanel = (
+    <section className="panel feed-panel">
+      <div className="panel-heading">
+        <div>
+          <span className="eyebrow">INTELLIGENCE FEED</span>
+          <h2>
+            {page === "Command Center"
+              ? "On your radar"
+              : "Threat Intelligence"}
+          </h2>
+        </div>
+        <span className="muted">{data?.counts.total ?? 0} stored articles</span>
+      </div>
+      <div className="filters">
+        <select
+          aria-label="Filter source"
+          value={source}
+          onChange={(e) => setSource(e.target.value)}
+        >
+          <option value="">All sources</option>
+          {data?.sources
+            .filter((s) => s.id !== "cisa")
+            .map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+        </select>
+        <select
+          aria-label="Filter category"
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+        >
+          <option value="">All categories</option>
+          {[
+            "Ransomware",
+            "Phishing",
+            "Malware",
+            "Data breach",
+            "Vulnerability",
+            "AI security",
+            "Threat intelligence",
+          ].map((c) => (
+            <option key={c}>{c}</option>
+          ))}
+        </select>
+        <button
+          aria-pressed={saved}
+          className={saved ? "selected" : ""}
+          onClick={() => setSaved(!saved)}
+        >
+          <Bookmark size={15} /> Saved
+        </button>
+      </div>
+      {!data?.items.length ? (
+        <div className="empty">
+          <Radio />
+          <h3>No intelligence in this view yet</h3>
+          <p>
+            Refresh public sources to collect article metadata, or adjust your
+            filters.
+          </p>
+          <button
+            disabled={pending}
+            onClick={() => void mutate({ action: "refresh" })}
+          >
+            Refresh sources
+          </button>
+        </div>
+      ) : (
+        data.items.map((item) => (
+          <article
+            className={`article ${item.read ? "is-read" : ""}`}
+            key={item.id}
+          >
+            <div className="article-top">
+              <span className="tag">{item.category}</span>
+              <span>
+                {data.sources.find((s) => s.id === item.sourceId)?.name}
+              </span>
+            </div>
+            <h3>
+              <a href={item.url} target="_blank" rel="noopener noreferrer">
+                {item.title}
+              </a>
+            </h3>
+            <p>
+              {item.summary.slice(0, 230)}
+              {item.summary.length > 230 ? "…" : ""}
+            </p>
+            <div className="article-footer">
+              <span title={`Ingested: ${stamp(item.ingestedAt)}`}>
+                Published {stamp(item.publishedAt)}
+              </span>
+              <div>
+                <button
+                  aria-label={
+                    item.bookmarked ? "Remove bookmark" : "Bookmark article"
+                  }
+                  aria-pressed={item.bookmarked}
+                  disabled={pending}
+                  onClick={() =>
+                    void mutate({
+                      action: "article",
+                      id: item.id,
+                      bookmarked: !item.bookmarked,
+                    })
+                  }
+                >
+                  <Bookmark
+                    size={16}
+                    fill={item.bookmarked ? "currentColor" : "none"}
+                  />
+                </button>
+                <button
+                  disabled={pending}
+                  onClick={() =>
+                    void mutate({
+                      action: "article",
+                      id: item.id,
+                      read: !item.read,
+                    })
+                  }
+                >
+                  {item.read ? <Check size={14} /> : null}
+                  {item.read ? "Read" : "Mark read"}
+                </button>
+              </div>
+            </div>
+          </article>
+        ))
+      )}
+    </section>
+  );
+  const trainingPanel = (
+    <section className="panel">
+      <div className="panel-heading">
+        <div>
+          <span className="eyebrow">BUILD DEFENSIVE DISCIPLINE</span>
+          <h2>Today’s training</h2>
+        </div>
+        <Target className="accent" size={20} />
+      </div>
+      <p className="muted">
+        Your plan for{" "}
+        {now?.toLocaleDateString(undefined, {
+          month: "short",
+          day: "numeric",
+        }) ?? "today"}
+      </p>
+      <div className="checklist">
+        {!data?.checklist.length && (
+          <p className="muted">A focused session starts with one objective.</p>
+        )}
+        {data?.checklist.map((task) => (
+          <label key={task.id}>
+            <input
+              type="checkbox"
+              checked={task.done}
+              disabled={pending}
+              onChange={(e) =>
+                void mutate({
+                  action: "toggle-task",
+                  id: task.id,
+                  done: e.target.checked,
+                })
+              }
+            />
+            <span className={task.done ? "done" : ""}>{task.title}</span>
+          </label>
+        ))}
+      </div>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          const form = e.currentTarget;
+          void mutate({
+            action: "task",
+            title: new FormData(form).get("title"),
+            day: localDay(),
+          }).then((ok) => {
+            if (ok) form.reset();
+          });
+        }}
+      >
+        <label className="sr-only" htmlFor="task-title">
+          New study objective
+        </label>
+        <div className="input-row">
+          <input
+            id="task-title"
+            name="title"
+            placeholder="Add a study objective…"
+            required
+            maxLength={200}
+          />
+          <button type="submit" disabled={pending}>
+            Add
+          </button>
+        </div>
+      </form>
+      <div className="session">
+        <div>
+          <Clock3 size={17} />
+          <span>
+            {active
+              ? `${Math.max(0, Math.floor(((now?.getTime() ?? Date.parse(active.startedAt)) - Date.parse(active.startedAt)) / 60000))} min · Session active`
+              : "Ready for a focused session?"}
+          </span>
+        </div>
+        <button
+          className="primary"
+          disabled={pending}
+          onClick={() => void mutate({ action: active ? "stop" : "start" })}
+        >
+          {active ? <Square size={15} /> : <Play size={15} />}
+          {active ? "Stop session" : "Start session"}
+        </button>
+      </div>
+      <div className="progress-label">
+        <span>Last 7 days</span>
+        <strong>
+          {studyMinutes} / {goal} min
+        </strong>
+      </div>
+      <progress value={studyMinutes} max={goal} />
+      <p className="small muted">
+        Completed session time. Weekly goal: {data?.settings?.weeklyHours ?? 15}{" "}
+        hours.
+      </p>
+    </section>
+  );
+  return (
+    <div className={`workspace ${collapsed ? "collapsed" : ""}`}>
+      <a className="skip" href="#main">
+        Skip to content
+      </a>
+      <aside className="sidebar">
+        <div className="brand">
+          <Shield size={32} strokeWidth={1.6} />
+          {!collapsed && (
+            <div>
+              {brand.wordmark}
+              <span>DEFENSIVE INTELLIGENCE</span>
+            </div>
+          )}
+        </div>
+        <button
+          className="collapse"
+          aria-label={collapsed ? "Expand navigation" : "Collapse navigation"}
+          onClick={() => setCollapsed(!collapsed)}
+        >
+          {collapsed ? <Menu size={18} /> : <X size={18} />}
+        </button>
+        <div className="nav-label">WORKSPACE</div>
+        <nav aria-label="Main navigation">
+          {nav.map((item) => (
+            <button
+              key={item.title}
+              className={page === item.title ? "active" : ""}
+              title={collapsed ? item.title : undefined}
+              aria-current={page === item.title ? "page" : undefined}
+              onClick={() => changePage(item.title)}
+            >
+              <item.icon size={19} />
+              {!collapsed && item.title}
+              {!collapsed && page === item.title && (
+                <span className="nav-dot" />
+              )}
+            </button>
+          ))}
+        </nav>
+        {!collapsed && (
+          <>
+            <div className="nav-label planned-label">ON THE ROADMAP</div>
+            <div className="planned">
+              {planned.map((name) => (
+                <div key={name}>
+                  <span>{name}</span>
+                  <span className="small">Planned</span>
+                </div>
+              ))}
+            </div>
+            <div className="sidebar-foot">
+              <Shield size={18} />
+              <div>
+                Local workspace<span>Single user · No AI required</span>
+              </div>
+            </div>
+          </>
+        )}
+      </aside>
+      <div className="main-shell">
+        <header className="topbar">
+          <div className="breadcrumb">
+            Workspace <ChevronRight size={14} />
+            <span>{page}</span>
+          </div>
+          <div className="search-box">
+            <Search size={17} />
+            <input
+              ref={search}
+              aria-label="Search workspace"
+              placeholder="Search intelligence, CVEs, notes…"
+              value={query}
+              maxLength={200}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+            <kbd>Ctrl K</kbd>
+          </div>
+          <span className="local-label">
+            <Shield size={14} /> LOCAL ONLY
+          </span>
+        </header>
+        <main id="main">
+          <div className="page-heading">
+            <div>
+              <div className="eyebrow">YOUR DEFENSIVE ADVANTAGE</div>
+              <h1>{page}</h1>
+              <p>
+                {page === "Command Center"
+                  ? brand.tagline
+                  : page === "Threat Intelligence"
+                    ? "Signals that matter. Context you can act on."
+                    : page === "CVE Watchtower"
+                      ? "Known exploitation, with evidence from CISA."
+                      : page === "Daily Training"
+                        ? "Small, deliberate steps. Stronger defenses."
+                        : page === "Research Notebook"
+                          ? "Turn your investigations into lasting knowledge."
+                          : "Make this workspace your own."}
+              </p>
+            </div>
+            <div className="heading-actions">
+              <span className="date">
+                {now?.toLocaleDateString(undefined, {
+                  weekday: "short",
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                }) ?? "Local time"}
+                <small>{now?.toLocaleTimeString() ?? "—"}</small>
+              </span>
+              <button
+                disabled={pending}
+                onClick={() => void mutate({ action: "refresh" })}
+              >
+                <RefreshCw size={16} className={pending ? "spin" : ""} />
+                {pending ? "Working…" : "Refresh sources"}
+              </button>
+            </div>
+          </div>
+          {error && (
+            <div role="alert" className="error">
+              {error}
+              <button onClick={() => void load()}>Retry</button>
+            </div>
+          )}
+          {loading && <p role="status">Loading your workspace…</p>}
+          {page === "Command Center" && (
+            <>
+              <div className="metrics">
+                <div>
+                  <Radio />
+                  <span>Intelligence collected</span>
+                  <strong>{data?.counts.total ?? "—"}</strong>
+                  <small>Persisted article metadata</small>
+                </div>
+                <div>
+                  <ShieldAlert />
+                  <span>Known exploited CVEs</span>
+                  <strong>{data?.counts.kev ?? "—"}</strong>
+                  <small>CISA catalog · Not your exposure</small>
+                </div>
+                <div>
+                  <Bookmark />
+                  <span>Saved investigations</span>
+                  <strong>{data?.counts.bookmarks ?? "—"}</strong>
+                  <small>Bookmarked intelligence</small>
+                </div>
+                <div>
+                  <Clock3 />
+                  <span>Study time · Last 7 days</span>
+                  <strong>
+                    {studyMinutes}
+                    <em> min</em>
+                  </strong>
+                  <small>
+                    {data?.checklist.filter((t) => t.done).length ?? 0}{" "}
+                    objectives completed today
+                  </small>
+                </div>
+              </div>
+              <section className="briefing">
+                <div className="briefing-icon">
+                  <Shield size={26} />
+                </div>
+                <div>
+                  <span className="eyebrow">
+                    DAILY DEFENSIVE BRIEFING · RULE-BASED
+                  </span>
+                  <h2>
+                    {data?.counts.total
+                      ? "Your intelligence, in perspective."
+                      : "Build your picture of the threat landscape."}
+                  </h2>
+                  <p>
+                    {data?.counts.total
+                      ? `${data.counts.total} articles collected and ${data.counts.kev} known exploited vulnerabilities in your local catalog. ${data.items[0] ? `Investigate: ${data.items[0].title}` : "Use Threat Intelligence to explore collected sources."}`
+                      : "Refresh sources to build your first briefing from public intelligence. No fabricated telemetry, no assumed exposure."}
+                  </p>
+                  <p className="small">
+                    Learning focus: distinguish vulnerability severity from
+                    evidence of exploitation. Check your understanding: does a
+                    high CVSS score prove exploitation?
+                  </p>
+                  <div className="briefing-bottom">
+                    <span>
+                      <Wifi size={14} />
+                      {health} of 4 sources fresh · Coverage may be incomplete
+                    </span>
+                    <button onClick={() => changePage("Threat Intelligence")}>
+                      Explore intelligence <BookOpen size={15} />
+                    </button>
+                  </div>
+                </div>
+              </section>
+              <div className="content-grid">
+                <div>{feedPanel}</div>
+                <div className="right-column">
+                  {trainingPanel}
+                  <section className="panel">
+                    <span className="eyebrow">SOURCE STATUS</span>
+                    <h2>Trust, with provenance</h2>
+                    {!data?.sources.length && (
+                      <p className="muted">Sources have not been refreshed.</p>
+                    )}
+                    {data?.sources.map((s) => (
+                      <div className="source-status" key={s.id}>
+                        <div>
+                          <span
+                            className={
+                              s.error
+                                ? "health-error"
+                                : s.lastSuccess
+                                  ? "health-ok"
+                                  : "muted"
+                            }
+                          >
+                            ●
+                          </span>{" "}
+                          {s.name}
+                          <small>
+                            {s.error ?? `Last success: ${stamp(s.lastSuccess)}`}
+                          </small>
+                        </div>
+                      </div>
+                    ))}
+                  </section>
+                </div>
+              </div>
+            </>
+          )}
+          {page === "Threat Intelligence" && feedPanel}
+          {page === "CVE Watchtower" && (
+            <section className="panel">
+              <div className="panel-heading">
+                <h2>Known Exploited Vulnerabilities</h2>
+                <span className="tag">CISA KEV</span>
+              </div>
+              <p className="muted">
+                Search by CVE, vendor, or product above. Inclusion indicates
+                evidence of exploitation; your specific exposure is unknown.
+                CVSS and EPSS are not yet integrated.
+              </p>
+              {!data?.kevs.length && (
+                <div className="empty">
+                  <ShieldAlert />
+                  <h3>No matching vulnerabilities</h3>
+                  <p>
+                    Refresh sources to ingest the CISA catalog, or change your
+                    search.
+                  </p>
+                </div>
+              )}
+              {data?.kevs.map((v) => (
+                <article className="article" key={v.id}>
+                  <div className="article-top">
+                    <a
+                      className="accent mono"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      href={`https://www.cve.org/CVERecord?id=${v.id}`}
+                    >
+                      {v.id}
+                    </a>
+                    <span className="tag warning">Known exploited</span>
+                  </div>
+                  <h3>{v.name}</h3>
+                  <p>{v.description}</p>
+                  <p>
+                    <strong>Required action:</strong> {v.action}
+                  </p>
+                  <div className="small muted">
+                    {v.vendor} · {v.product} · Added {v.addedAt} · CISA due date{" "}
+                    {v.dueDate}
+                  </div>
+                  <p className="small muted">
+                    CISA due dates apply to covered US federal agencies.
+                    Ingested {stamp(v.ingestedAt)}.{" "}
+                    <a
+                      href="https://www.cisa.gov/known-exploited-vulnerabilities-catalog"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Original catalog
+                    </a>
+                  </p>
+                </article>
+              ))}
+            </section>
+          )}
+          {page === "Daily Training" && (
+            <div className="training-layout">
+              {trainingPanel}
+              <section className="panel">
+                <h2>Session history</h2>
+                <p className="muted">
+                  Your completed and active sessions from the last seven days.
+                </p>
+                {!data?.sessions.length && (
+                  <p className="empty">Your first session starts here.</p>
+                )}
+                {data?.sessions.map((s) => (
+                  <div className="source-status" key={s.id}>
+                    {stamp(s.startedAt)}
+                    <small>
+                      {s.endedAt
+                        ? `${Math.floor((Date.parse(s.endedAt) - Date.parse(s.startedAt)) / 60000)} minutes · Completed`
+                        : "Active session"}
+                    </small>
+                  </div>
+                ))}
+              </section>
+            </div>
+          )}
+          {page === "Research Notebook" && (
+            <div className="training-layout">
+              <section className="panel">
+                <h2>Capture an investigation</h2>
+                <p className="muted">
+                  Markdown is saved as text. Raw HTML is never rendered.
+                </p>
+                <form
+                  className="stack"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    noteForm(e.currentTarget);
+                  }}
+                >
+                  <label>
+                    Title
+                    <input name="title" required maxLength={200} />
+                  </label>
+                  <label>
+                    Tags
+                    <input
+                      name="tags"
+                      maxLength={500}
+                      placeholder="authentication, incident-response"
+                    />
+                  </label>
+                  <label>
+                    Research note
+                    <textarea
+                      name="body"
+                      required
+                      maxLength={20000}
+                      rows={12}
+                      placeholder="Evidence, references, questions, and next steps…"
+                    />
+                  </label>
+                  <button className="primary" disabled={pending}>
+                    Save note
+                  </button>
+                </form>
+              </section>
+              <section className="panel">
+                <div className="panel-heading">
+                  <h2>Your research</h2>
+                  <button
+                    disabled={!data?.notes.length}
+                    onClick={() =>
+                      download(
+                        "gapsound-notes.json",
+                        JSON.stringify(data?.notes, null, 2),
+                        "application/json",
+                      )
+                    }
+                  >
+                    Export JSON
+                  </button>
+                </div>
+                <p className="muted">
+                  Searches title, content and tags. Up to 100 results per view.
+                </p>
+                {!data?.notes.length && (
+                  <p className="empty">No notes in this view.</p>
+                )}
+                {data?.notes.map((n) => (
+                  <article className="article" key={n.id}>
+                    <span className="tag">{n.tags || "Research"}</span>
+                    <h3>{n.title}</h3>
+                    <p className="note-body">{n.body}</p>
+                    <div className="article-footer">
+                      <span>{stamp(n.createdAt)}</span>
+                      <button
+                        onClick={() =>
+                          download(
+                            `${n.id}.md`,
+                            `# ${n.title}\n\nTags: ${n.tags}\n\n${n.body}`,
+                            "text/markdown",
+                          )
+                        }
+                      >
+                        Export Markdown
+                      </button>
+                    </div>
+                  </article>
+                ))}
+              </section>
+            </div>
+          )}
+          {page === "Settings" && (
+            <section
+              className="panel settings-panel"
+              key={`${data?.settings?.weeklyHours}-${data?.settings?.refreshMinutes}`}
+            >
+              <h2>Workspace preferences</h2>
+              <form
+                className="stack"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const values = new FormData(e.currentTarget);
+                  void mutate({
+                    action: "settings",
+                    weeklyHours: Number(values.get("hours")),
+                    refreshMinutes: Number(values.get("refresh")),
+                  });
+                }}
+              >
+                <label>
+                  Weekly study goal (hours)
+                  <input
+                    name="hours"
+                    type="number"
+                    min={1}
+                    max={100}
+                    required
+                    defaultValue={data?.settings?.weeklyHours ?? 15}
+                  />
+                </label>
+                <label>
+                  Automatic refresh interval (minutes)
+                  <input
+                    name="refresh"
+                    type="number"
+                    min={15}
+                    max={1440}
+                    required
+                    defaultValue={data?.settings?.refreshMinutes ?? 60}
+                  />
+                </label>
+                <p className="muted">
+                  Refresh runs while this workspace is open. Each source has a
+                  minimum 15-minute cooldown, including failed attempts.
+                </p>
+                <button className="primary" disabled={pending}>
+                  Save preferences
+                </button>
+              </form>
+              <hr />
+              <h3>Local by design</h3>
+              <p className="muted">
+                No AI provider is connected. Data stays in your local SQLite
+                database. Sources receive network requests only when refreshing.
+                This application must remain bound to localhost.
+              </p>
+            </section>
+          )}
+          <footer>
+            <span>
+              <Shield size={13} />
+              {brand.name} · Personal defensive intelligence
+            </span>
+            <span>Source-backed data. Human-led decisions.</span>
+          </footer>
+        </main>
+      </div>
+    </div>
+  );
+}

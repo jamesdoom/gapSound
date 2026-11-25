@@ -1,0 +1,59 @@
+import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+export const sources = sqliteTable("sources", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  url: text("url").notNull(),
+  lastSuccess: text("last_success"),
+  lastAttempt: text("last_attempt"),
+  error: text("error"),
+});
+export const articles = sqliteTable("articles", {
+  id: text("id").primaryKey(),
+  sourceId: text("source_id")
+    .notNull()
+    .references(() => sources.id),
+  title: text("title").notNull(),
+  url: text("url").notNull().unique(),
+  summary: text("summary").notNull(),
+  category: text("category").notNull(),
+  publishedAt: text("published_at"),
+  ingestedAt: text("ingested_at").notNull(),
+  bookmarked: integer("bookmarked", { mode: "boolean" })
+    .notNull()
+    .default(false),
+  read: integer("read", { mode: "boolean" }).notNull().default(false),
+});
+export const vulnerabilities = sqliteTable("vulnerabilities", {
+  id: text("id").primaryKey(),
+  vendor: text("vendor").notNull(),
+  product: text("product").notNull(),
+  name: text("name").notNull(),
+  description: text("description").notNull(),
+  action: text("action").notNull(),
+  addedAt: text("added_at").notNull(),
+  dueDate: text("due_date").notNull(),
+  ingestedAt: text("ingested_at").notNull(),
+});
+export const tasks = sqliteTable("tasks", {
+  id: text("id").primaryKey(),
+  title: text("title").notNull(),
+  done: integer("done", { mode: "boolean" }).notNull().default(false),
+  day: text("day").notNull(),
+});
+export const sessions = sqliteTable("sessions", {
+  id: text("id").primaryKey(),
+  startedAt: text("started_at").notNull(),
+  endedAt: text("ended_at"),
+});
+export const notes = sqliteTable("notes", {
+  id: text("id").primaryKey(),
+  title: text("title").notNull(),
+  body: text("body").notNull(),
+  tags: text("tags").notNull(),
+  createdAt: text("created_at").notNull(),
+});
+export const settings = sqliteTable("settings", {
+  id: text("id").primaryKey(),
+  weeklyHours: integer("weekly_hours").notNull().default(15),
+  refreshMinutes: integer("refresh_minutes").notNull().default(60),
+});
