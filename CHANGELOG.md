@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.4 — 2026-11-25
+
+- Added manual Settings cleanup for unbookmarked feed metadata ingested more than 90 days ago, with a preview and explicit confirmation.
+- Bounded cleanup to 400 previewed records, rechecked bookmarks/age at deletion, and expired previews after 15 minutes.
+- Preserved notes, sessions, tasks, sources and KEV records; no automatic cleanup is performed.
+- Added retention query index migration 0003 and database/browser regression coverage.
+
 ## 0.1.3 — 2026-11-25
 
 - Persisted retry eligibility and consecutive failure counts, with exponential delays from 15 minutes to 24 hours and longer HTTP 429/503 Retry-After delays respected.

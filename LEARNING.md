@@ -1,5 +1,13 @@
 # Security learning notes
 
+## Making cleanup deliberate and bounded
+
+`src/services/retention.ts` selects only unbookmarked article metadata older than 90 days by ingestion time. Publication dates are untrusted and may describe very old articles that were just imported, so they do not determine eligibility. The browser previews IDs and requires confirmation; the server validates the request, restricts age again, expires old previews and rechecks bookmark state in the DELETE predicate. A bookmark added after preview protects that record. Only previewed IDs can be deleted, up to 400, fitting the API's 32 KiB input budget. `src/app/api/retention/route.ts` applies the same local Host/Origin boundary as other mutations.
+
+`tests/retention.test.ts` covers preview without deletion, exact cutoff boundaries, recent records, saved records, changes after preview, personal record preservation, malformed/stale plans and batching. The browser suite exercises confirmation and original bookmark preservation in a synthetic test database. Actual user data is never cleaned by tests. This is permanent record removal, not secure erasure: SQLite pages and backups can retain deleted data. There is no undo; back up first. Sources may reintroduce content, and free-text research notes retain their original URLs.
+
+**Question:** Why must bookmark eligibility be checked again when deleting, rather than trusted from the preview?
+
 ## Respecting rate limits across restarts
 
 `src/lib/feed-retry.ts` accepts Retry-After delay-seconds or HTTP-date syntax, then chooses the later of the provider deadline and a local exponential backoff. `src/services/feeds.ts` stores that deadline and the failure count in SQLite; skipped sources are not fetched, and a successful import resets the count. Migration 0002 preserves existing records. This prevents repeated refresh clicks or app restarts from bypassing a source's waiting period and reduces load during outages. The UI says retry **eligible**, since a fetch happens only on a later refresh while the app is open.

@@ -38,6 +38,8 @@ SQLite lives in ignored `data/gapsound.db`. Migrations are transactional and ver
 
 ## Backup and restore
 
+Settings → **Feed data retention** previews unbookmarked article metadata ingested more than 90 days ago. Nothing is deleted until you confirm removal. Cleanup processes at most 400 previewed records and rechecks bookmarks before deletion. A preview expires after 15 minutes. Notes, bookmarks, study records, sources and KEV records are preserved. Cleanup removes the selected article records and their read status; there is no undo. Source feeds can reintroduce removed articles during a later refresh. No automatic retention job runs.
+
 Stop GapSound before backup or restore. Copy the entire `data` directory to a private backup location. To restore, stop the app, retain a copy of current data, then replace `data` with the backup and run `npm run db:migrate`. Notes can also be exported individually as Markdown or as JSON for the current search view (up to 100 results). Automated restore testing remains pending.
 
 ## Troubleshooting and limitations

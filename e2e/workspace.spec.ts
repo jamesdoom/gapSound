@@ -16,13 +16,16 @@ test("intelligence search, filter, bookmarks and read state survive reload", asy
   await expect(
     page.getByRole("link", { name: "Demonstration: phishing investigation" }),
   ).toBeVisible();
-  await page
+  const article = page
+    .locator("article")
+    .filter({ hasText: "Demonstration: phishing investigation" });
+  await article
     .getByRole("button", { name: "Bookmark article", exact: true })
     .click();
-  await page.getByRole("button", { name: "Mark read", exact: true }).click();
+  await article.getByRole("button", { name: "Mark read", exact: true }).click();
   await page.reload();
   await expect(
-    page.getByRole("button", { name: "Remove bookmark", exact: true }),
+    article.getByRole("button", { name: "Remove bookmark", exact: true }),
   ).toBeVisible();
   await page
     .getByRole("navigation")
@@ -138,4 +141,64 @@ test("API rejects cross-origin and rebinding requests", async ({ request }) => {
     headers: { host: "attacker.example:3000" },
   });
   expect(host.status()).toBe(403);
+});
+
+test("retention previews, requires confirmation, removes only expired unsaved articles", async ({
+  page,
+  request,
+}) => {
+  await page.goto("/");
+  await page
+    .getByRole("navigation")
+    .getByRole("button", { name: "Settings" })
+    .click();
+  await page
+    .getByRole("button", { name: "Preview cleanup", exact: true })
+    .click();
+  await expect(page.getByText(/1 eligible article records/)).toBeVisible();
+  const remove = page.getByRole("button", {
+    name: "Remove 1 old article records",
+    exact: true,
+  });
+  await expect(remove).toBeDisabled();
+  await page
+    .getByRole("checkbox", { name: /I understand this removes/ })
+    .check();
+  await remove.click();
+  await expect(page.getByText(/Removed 1 old article records/)).toBeVisible();
+  await page
+    .getByRole("button", { name: "Preview cleanup", exact: true })
+    .click();
+  await expect(page.getByText(/0 eligible article records/)).toBeVisible();
+  await page
+    .getByRole("navigation")
+    .getByRole("button", { name: "Threat Intelligence" })
+    .click();
+  await expect(
+    page.getByRole("link", {
+      name: "Demonstration: saved-expired-fixture",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("link", {
+      name: "Demonstration: expired-fixture",
+      exact: true,
+    }),
+  ).toHaveCount(0);
+  const blocked = await request.post("/api/retention", {
+    headers: { origin: "https://attacker.example" },
+    data: { action: "preview" },
+  });
+  expect(blocked.status()).toBe(403);
+  const invalid = await request.post("/api/retention", {
+    headers: { origin: "http://127.0.0.1:3100" },
+    data: {
+      action: "cleanup",
+      confirmed: false,
+      cutoff: new Date().toISOString(),
+      ids: ["anything"],
+    },
+  });
+  expect(invalid.status()).toBe(400);
 });

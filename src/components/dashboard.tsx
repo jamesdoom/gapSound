@@ -1,4 +1,5 @@
 "use client";
+import { RetentionPanel } from "./retention-panel";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   BookOpen,
@@ -866,6 +867,8 @@ export function Dashboard() {
                   Save preferences
                 </button>
               </form>
+              <hr />
+              <RetentionPanel onChange={load} />
               <hr />
               <h3>Local by design</h3>
               <p className="muted">

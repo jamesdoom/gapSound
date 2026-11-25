@@ -18,6 +18,21 @@ await db.execute(
 await db.execute(
   "INSERT INTO vulnerabilities VALUES ('CVE-2099-99999','Fictional Vendor','Demonstration Product','Demonstration vulnerability','Synthetic test fixture, not a real CVE.','Apply fictional remediation.','2099-01-01','2099-02-01','2099-01-01T00:00:00Z')",
 );
+for (const [id, saved] of [
+  ["expired-fixture", 0],
+  ["saved-expired-fixture", 1],
+] as const) {
+  await db.execute({
+    sql: "INSERT INTO articles(id,source_id,title,url,summary,category,ingested_at,bookmarked) VALUES (?,'fixture',?,?,'Demonstration only','Research',?,?)",
+    args: [
+      id,
+      "Demonstration: " + id,
+      "https://example.com/" + id,
+      new Date(Date.now() - 100 * 86400000).toISOString(),
+      saved,
+    ],
+  });
+}
 db.close();
 const server = spawn(
   process.execPath,

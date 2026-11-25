@@ -35,3 +35,7 @@ Outbound feed requests use native HTTPS with a custom socket lookup. Every resol
 ## Persistent source retry scheduling
 
 Migration 0002 adds source failure counts and retry-eligible timestamps without rewriting content. The migration runner applies ordered versioned SQL once per database. Each failure increments an exponential delay from 15 minutes to a 24-hour local cap; a valid longer Retry-After on HTTP 429/503 takes precedence. Both manual and automatic refresh check persisted eligibility. Successful imports reset failure counts atomically with source metadata; no sleeping request or retry worker is created. Browser regression tests use an isolated database and port 3100 so local development on port 3000 can continue.
+
+## Manual metadata retention
+
+Settings uses a dedicated same-origin POST endpoint for preview and confirmed cleanup. A fixed 90-day ingestion-age rule protects recently imported metadata regardless of source publication time. Each request removes at most 400 previewed IDs, rechecking current bookmark state and cutoff; preview cutoffs expire after 15 minutes. Migration 0003 adds a composite index for eligibility queries. No automatic cleanup or SQLite VACUUM is run, and personal records and KEV catalog records are excluded. The preview is not an authorization token; exact local Host/Origin validation remains the access boundary.
