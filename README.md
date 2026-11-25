@@ -24,7 +24,7 @@ npm run db:migrate
 npm run dev
 ```
 
-Open http://127.0.0.1:3000. Click **Refresh sources** to populate intelligence; a clean install contains no demonstration telemetry. Refresh runs automatically at the configured interval while the browser workspace remains open. Sources have a 15-minute cooldown including failures. No background daemon runs after the workspace closes.
+Open http://127.0.0.1:3000. Click **Refresh sources** to populate intelligence; a clean install contains no demonstration telemetry. Refresh runs automatically at the configured interval while the browser workspace remains open. Sources have a minimum 15-minute cooldown. Consecutive failures back off for 15 minutes, 30 minutes, 1 hour, and progressively up to 24 hours. HTTP 429/503 Retry-After delays take precedence when longer; waiting periods survive restarts. Refresh is attempted at the next manual or automatic refresh after eligibility, not by a background timer. No background daemon runs after the workspace closes.
 
 ```powershell
 npm run typecheck
@@ -42,10 +42,10 @@ Stop GapSound before backup or restore. Copy the entire `data` directory to a pr
 
 ## Troubleshooting and limitations
 
-- If your Windows npm shim points to a missing roaming installation, use `node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" ci` and the same prefix for `run dev`, etc. No system configuration changes are needed.
+- Standard `npm` works in the VS Code terminal. A restricted agent environment may need the bundled CLI path; this does not indicate a broken local npm installation.
 - Database setup errors: stop the server and run `npm run db:migrate` from the repository root.
 - Keep port 3000 and localhost defaults. Host/origin checks intentionally reject other ports/hosts.
-- Source failures are isolated and shown in Command Center. Retry after cooldown; do not bypass source access restrictions.
+- Source failures show a retry-eligible timestamp and failure count in Command Center. Manual refresh respects the same waiting period; do not bypass source access restrictions.
 - Feed availability and terms can change. See docs/INTEGRATIONS.md for verification status.
 - Search results cap at 100; pagination/date filters/watchlists and richer briefings are pending.
 - Notes currently display Markdown as safe plain text. Editing/deleting notes is pending.
@@ -63,7 +63,7 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
-Tests start their own production server on port 3000; stop any existing GapSound server first. Each invocation uses a new temporary database and labeled synthetic fixtures, with no public feed requests. Test directories are retained for debugging; remove only known `gapsound-e2e-*` folders from your OS temporary directory when no tests are running. To use installed Chrome on Windows:
+Tests start their own isolated production server on port 3100; your development server can stay on port 3000. Each invocation uses a new temporary database and labeled synthetic fixtures, with no public feed requests. Test directories are retained for debugging; remove only known `gapsound-e2e-*` folders from your OS temporary directory when no tests are running. To use installed Chrome on Windows:
 
 ```powershell
 $env:PLAYWRIGHT_CHANNEL='chrome'

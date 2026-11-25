@@ -1,5 +1,13 @@
 # Security learning notes
 
+## Respecting rate limits across restarts
+
+`src/lib/feed-retry.ts` accepts Retry-After delay-seconds or HTTP-date syntax, then chooses the later of the provider deadline and a local exponential backoff. `src/services/feeds.ts` stores that deadline and the failure count in SQLite; skipped sources are not fetched, and a successful import resets the count. Migration 0002 preserves existing records. This prevents repeated refresh clicks or app restarts from bypassing a source's waiting period and reduces load during outages. The UI says retry **eligible**, since a fetch happens only on a later refresh while the app is open.
+
+`tests/source-backoff.test.ts` simulates 429/503 failures, independently successful sources, closing/reopening the database, skipping early retries and recovery. `tests/feed-retry.test.ts` covers malformed/past headers, long provider delays and the local 24-hour backoff cap. Provider delays may exceed that cap. Extremely large valid numeric values saturate at year 9999 to avoid timestamp overflow. There is no randomized jitter or cross-process refresh lock yet; run one server.
+
+**Question:** Why must retry eligibility be stored in the database instead of only in a browser timer?
+
 ## Closing the DNS validation gap
 
 `src/lib/feed-network.ts` validates all DNS answers and supplies a validated address directly to the HTTPS socket lookup callback. Checking a hostname before calling ordinary fetch would leave a second lookup vulnerable to DNS rebinding. The native HTTPS request retains the source hostname for TLS certificate verification, disables socket reuse, rejects redirects and bounds the entire request. `tests/feed-network.test.ts` covers private/special IPv4/IPv6 destinations, mixed DNS answers, both lookup callback shapes, HTTP errors, oversized bodies and unsupported compression. This is defense in depth, not permission to fetch arbitrary URLs: fixed source allowlisting remains mandatory. Trusted source compromise, workstation compromise and network policy outside the application remain risks.

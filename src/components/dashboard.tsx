@@ -634,6 +634,12 @@ export function Dashboard() {
                           <small>
                             {s.error ?? `Last success: ${stamp(s.lastSuccess)}`}
                           </small>
+                          {s.error && s.nextAttemptAt && (
+                            <small>
+                              Retry eligible: {stamp(s.nextAttemptAt)} ·{" "}
+                              {s.consecutiveFailures} consecutive failures
+                            </small>
+                          )}
                         </div>
                       </div>
                     ))}

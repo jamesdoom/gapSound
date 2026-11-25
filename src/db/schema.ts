@@ -6,6 +6,8 @@ export const sources = sqliteTable("sources", {
   lastSuccess: text("last_success"),
   lastAttempt: text("last_attempt"),
   error: text("error"),
+  consecutiveFailures: integer("consecutive_failures").notNull().default(0),
+  nextAttemptAt: text("next_attempt_at"),
 });
 export const articles = sqliteTable("articles", {
   id: text("id").primaryKey(),

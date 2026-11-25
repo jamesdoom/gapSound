@@ -16,3 +16,5 @@ Framework references: https://nextjs.org/docs/app/getting-started/installation a
 Direct Node HTTP verification during this session returned HTTP 200 for all four configured endpoints. CISA returned application/json and all three news sources returned XML/RSS. The application-level full live ingest and source terms review remain pending; endpoint availability alone does not establish permission for all usage.
 
 Hardened transport smoke test (November 25, 2026): all four configured sources ingested successfully into an isolated temporary database, producing 35 articles and 1,796 KEV entries. Public DNS address validation and socket pinning were enabled. This test does not replace source terms/policy review.
+
+HTTP 429/503 now preserve Retry-After and persist the next eligible fetch time. Repeated failures use exponential backoff up to a local 24-hour cap; longer provider deadlines win. HTTP-date and decimal-seconds formats follow RFC 9110 section 10.2.3: https://www.rfc-editor.org/rfc/rfc9110.html#name-retry-after . Automatic refresh intervals may delay the actual retry beyond eligibility. No immediate retries occur.

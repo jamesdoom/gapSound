@@ -5,7 +5,12 @@ import { db } from "../db";
 import { articles, sources, vulnerabilities } from "../db/schema";
 import { eq } from "drizzle-orm";
 import { plainText, safeUrl } from "../lib/security";
-import { fetchPublicFeed } from "../lib/feed-network";
+import { fetchPublicFeed, SourceHttpError } from "../lib/feed-network";
+import {
+  failureSchedule,
+  MIN_RETRY_MS,
+  sourceCanRefresh,
+} from "../lib/feed-retry";
 
 export const feedSources = [
   {
@@ -97,36 +102,50 @@ async function fetchSource(url: string) {
   );
 }
 let refreshing: Promise<void> | undefined;
-async function ingest() {
+export async function ingest(
+  database: typeof db = db,
+  fetcher = fetchSource,
+  clock = () => new Date(),
+) {
   // Sequential fetches bound concurrency to one; cooldown bounds retries, including failures.
   for (const source of feedSources) {
-    await db.insert(sources).values(source).onConflictDoNothing();
-    const [previous] = await db
+    await database.insert(sources).values(source).onConflictDoNothing();
+    const [previous] = await database
       .select()
       .from(sources)
       .where(eq(sources.id, source.id));
-    if (
-      previous.lastAttempt &&
-      Date.now() - Date.parse(previous.lastAttempt) < 15 * 60 * 1000
-    )
-      continue;
-    const now = new Date().toISOString();
-    await db
+    if (!sourceCanRefresh(previous, clock().getTime())) continue;
+    const now = clock().toISOString();
+    await database
       .update(sources)
-      .set({ lastAttempt: now })
+      .set({
+        lastAttempt: now,
+        nextAttemptAt: new Date(Date.parse(now) + MIN_RETRY_MS).toISOString(),
+      })
       .where(eq(sources.id, source.id));
     try {
-      const text = await fetchSource(source.url);
-      await persistSource(source.id, text, now);
+      const text = await fetcher(source.url);
+      await persistSource(source.id, text, clock().toISOString(), database);
     } catch (error) {
       const message =
         error instanceof Error &&
         /^Source returned HTTP \d+$/.test(error.message)
           ? error.message
           : "Refresh failed: network, format, or size error";
-      await db
+      const retryAfter =
+        error instanceof SourceHttpError && [429, 503].includes(error.status)
+          ? error.retryAfter
+          : undefined;
+      await database
         .update(sources)
-        .set({ error: message })
+        .set({
+          error: message,
+          ...failureSchedule(
+            previous.consecutiveFailures,
+            clock().getTime(),
+            retryAfter,
+          ),
+        })
         .where(eq(sources.id, source.id));
     }
   }
@@ -180,7 +199,7 @@ export async function persistSource(
     }
     await tx
       .update(sources)
-      .set({ lastSuccess: now, error: null })
+      .set({ lastSuccess: now, error: null, consecutiveFailures: 0 })
       .where(eq(sources.id, sourceId));
   });
 }

@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { migrateDatabase } from "../src/db/migrate";
 import { createClient } from "@libsql/client";
 import { drizzle } from "drizzle-orm/libsql";
 import { expect, it } from "vitest";
@@ -19,9 +19,7 @@ it("rolls back a partially written catalog and preserves last successful refresh
   const client = createClient({ url: ":memory:" });
   const db = drizzle(client, { schema });
   try {
-    await client.executeMultiple(
-      readFileSync("migrations/0001_foundation.sql", "utf8"),
-    );
+    await migrateDatabase(client);
     await client.execute(
       "INSERT INTO sources(id,name,url,last_success) VALUES ('cisa','CISA','https://example.com','previous')",
     );
@@ -66,9 +64,7 @@ it("rejects malformed catalog records before committing any changes", async () =
   const client = createClient({ url: ":memory:" });
   const db = drizzle(client, { schema });
   try {
-    await client.executeMultiple(
-      readFileSync("migrations/0001_foundation.sql", "utf8"),
-    );
+    await migrateDatabase(client);
     await expect(
       persistSource(
         "cisa",

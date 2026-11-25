@@ -2,42 +2,41 @@
 
 ## Status
 
-Phase 0 foundation and initial Phase 1 vertical slice implemented. Phase 1 is **not complete**. A Vercel deployment exists but is not supported for application use yet; authentication now protects all deployments. No paid service was added. Last completed update: DNS-pinned public feed transport and transactional source imports. GS-002 remains in progress pending full accessibility and process-restart checks; then GS-003 ingestion hardening.
+Phase 1 remains in progress. Latest update: persisted feed retry/backoff, Retry-After support, retry status display, and migration 0002. GS-003 still needs retention and source policy review. GS-002 still needs a full accessibility review and full application process-restart coverage.
 
-## Implemented
+Vercel Authentication was verified to protect all deployments in the previous update. Hosting remains unsupported for real application use until storage/auth architecture is adapted. No Vercel settings or paid services were changed this session. Git pushes may trigger the user's existing protected Vercel build integration.
 
-Command Center, configured RSS ingestion and CISA KEV, article search/source/category filters/bookmarks/read state, basic KEV search, daily objectives, persistent sessions, notes with exports, settings and source health. Metrics derive from stored data. Future modules are labeled planned. The basic briefing is rule-based; archive/regeneration remains pending.
+## Current verification
 
-## Verification actually executed
+- 80 tests across 9 Vitest files passed, including migration upgrades, HTTP header parsing, source isolation, SQLite close/reopen persistence, successful recovery and exact loopback-port checks.
+- TypeScript (including production build), lint and production build passed.
+- All 5 Chrome browser tests passed on isolated loopback port 3100, including retry eligibility display. The user's server on port 3000 was left alone.
+- Migration 0002 applied successfully to the local database. Repeated application and upgrades from an existing schema are covered by tests.
+- No live public feed calls were made in this update. The prior update verified 35 articles and 1,796 KEV records from four sources in an isolated database.
 
-- Installed dependencies; npm reported zero vulnerabilities across 418 audited packages.
-- Migration 0001 applied successfully to local SQLite.
-- TypeScript check and ESLint passed.
-- Initial Vitest: 3 files, 20 tests passed. Second update: 4 files, 21 tests passed, adding component loading/error coverage.
-- Production Next.js build passed.
-- All four public-source direct HTTP checks returned 200: SANS XML (6,676 bytes), Krebs RSS (125,259 bytes), BleepingComputer XML (13,003 bytes), CISA JSON (1,882,385 bytes). No bypass used. Terms and future availability remain subject to review.
-- Playwright with installed Chrome: 5 tests passed. Covered article search/filter/bookmark/read, CVE research, tasks/sessions, notes/export and malicious markup, mobile overflow/settings, and cross-origin/rebinding rejection. Persistence was checked across browser reloads using isolated temporary databases. No live feed requests.
-- Current update: 58 tests across 6 Vitest files passed; lint, explicit typecheck, production build and all 5 Chrome browser tests passed.
-- Isolated live ingestion through the new transport succeeded: 35 articles, 1,796 KEV records, all four sources successful. User data was not changed.
-- Verified Vercel protection configuration is all deployments; an unauthenticated production request returned HTTP 302 to Vercel sign-in. No Vercel settings were changed.
-- Full visual/accessibility review and process-restart persistence tests remain pending.
+## Behavior and limitations
 
-## Decisions and remaining risks
+Failures delay the next eligible refresh by 15 minutes, 30 minutes, 1 hour and progressively up to 24 hours. Valid longer Retry-After delays on 429/503 responses take precedence. Both manual and automatic refresh honor persisted deadlines; a restart does not reset them. A retry occurs only on a later refresh while the app is open. Success resets the failure count. There is no jitter or multi-process locking; run one application server against each database.
 
-Next.js/React, Tailwind and local SQLite through Drizzle/libSQL; no native compiler setup or hosted database. Exact local Host/Origin checks require port 3000. Input, network and query limits implemented. No arbitrary URL retrieval or raw HTML rendering. DNS pinning/public-IP validation and atomic per-source imports are now implemented. Retry-After/backoff, retention, source policy review, secret scanning and expanded end-to-end coverage remain outstanding. Markdown is displayed as plain text. Results are bounded at 100 per content view without pagination. See TASKS.md and SECURITY.md.
+Remaining Phase 1 work: retention and provider-policy review; accessibility and application restart tests; pagination/date filters/watchlists; full persisted daily briefings; richer CVE research; note editing and training improvements; secret scanning and backup/restore verification. Notes currently display Markdown as plain text. The app remains single-user/local-first.
 
-## Run instructions and environment
+## Run instructions
 
-The default npm shim references a missing roaming installation. Use the bundled npm without changing system settings:
+Normal npm works in the user's VS Code terminal. The earlier failure was limited to the restricted agent environment; no npm installation repair is needed.
 
-```powershell
-node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" ci
-node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" run db:migrate
-node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" run dev
-```
+    npm run db:migrate
+    npm run dev
 
-Open http://127.0.0.1:3000. Use the same prefix with `run typecheck`, `run lint`, `test` or `run build`. No server is intentionally left running at session end. Restricted-shell Git can report ownership mismatch because clone ran as desktop user; use authorized Git execution as that user, not global safe.directory changes.
+Open http://127.0.0.1:3000. If the dev server was already running during the update, restart it after migration. Verification commands:
 
-## Next steps and learning
+    npm test
+    npm run typecheck
+    npm run lint
+    npm run build
+    npm run test:e2e
 
-Complete GS-002 accessibility/process-restart coverage and GS-003 Retry-After/backoff, retention and source-policy review, then continue the Phase 1 backlog. Question: why does loopback binding alone fail to prevent cross-origin requests to a local application?
+Browser tests require Playwright Chromium or PLAYWRIGHT_CHANNEL=chrome, use a fresh temporary database and port 3100, and can run alongside local development on 3000. Temporary test data is retained for diagnosis. Restricted agent commands may use the bundled npm CLI path; restricted Git may need command-scoped safe.directory or authorized execution. No global configuration changes are necessary.
+
+## Next action and learning
+
+Continue GS-003 retention/source-policy work or GS-002 accessibility/process-restart review. See LEARNING.md for how persisted deadlines prevent refresh clicks or restarts from bypassing provider rate limits. Question: why is an in-memory timer insufficient to enforce Retry-After after an application restart?

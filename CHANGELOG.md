@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.3 — 2026-11-25
+
+- Persisted retry eligibility and consecutive failure counts, with exponential delays from 15 minutes to 24 hours and longer HTTP 429/503 Retry-After delays respected.
+- Added source retry timestamps and failure counts to Command Center; manual and automatic refresh share the same policy.
+- Added migration 0002, ordered migration execution, non-destructive upgrade tests and database-reopen retry tests.
+- Corrected npm guidance: normal npm works in the user's terminal; the CLI workaround applies to the restricted agent environment.
+
 ## 0.1.2 — 2026-11-25
 
 - Hardened feed transport with public-address validation for IPv4/IPv6 and DNS pinning at socket connection time. Retained TLS hostname verification, fixed URL allowlisting, no redirects, total request deadline and response bounds.

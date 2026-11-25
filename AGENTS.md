@@ -12,7 +12,7 @@ Remain bound to 127.0.0.1:3000. Do not deploy publicly or add paid services, AI 
 
 ## Approved commands and definition of done
 
-Use project-local tools: npm install (npm ci after lockfile exists), npm run db:migrate, npm run dev, npm run typecheck, npm run lint, npm test, npm run build, npm audit, npm run format. No global installations. Add meaningful tests for features and security boundaries; do not use live services in routine tests. A completed update passes typecheck, lint, relevant tests and production build, updates documentation/backlog/handoff, and is committed and pushed. Record checks that cannot run honestly. Windows workaround for broken npm shim: node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" followed by npm arguments.
+Use project-local tools: npm install (npm ci after lockfile exists), npm run db:migrate, npm run dev, npm run typecheck, npm run lint, npm test, npm run build, npm audit, npm run format. No global installations. Add meaningful tests for features and security boundaries; do not use live services in routine tests. A completed update passes typecheck, lint, relevant tests and production build, updates documentation/backlog/handoff, and is committed and pushed. Record checks that cannot run honestly. Normal npm works in the user’s VS Code terminal; only the restricted agent shell needs this fallback: node "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" followed by npm arguments.
 
 ## Resume
 

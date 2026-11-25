@@ -8,6 +8,10 @@ const db = createClient({ url: `file:${path}/gapsound.db` });
 await db.execute(
   "INSERT INTO sources(id,name,url,last_success) VALUES ('fixture','Demonstration fixture','https://example.com/feed','2026-11-25T12:00:00Z')",
 );
+await db.execute({
+  sql: "INSERT INTO sources(id,name,url,error,consecutive_failures,next_attempt_at) VALUES ('fixture-delay','Demonstration delayed source','https://example.com/delay','Demonstration: HTTP 429',2,?)",
+  args: [new Date(Date.now() + 7200000).toISOString()],
+});
 await db.execute(
   "INSERT INTO articles(id,source_id,title,url,summary,category,published_at,ingested_at) VALUES ('fixture-article','fixture','Demonstration: phishing investigation','https://example.com/demo','Synthetic metadata for automated browser testing.','Phishing','2026-11-25T12:00:00Z','2026-11-25T12:01:00Z')",
 );
@@ -17,7 +21,14 @@ await db.execute(
 db.close();
 const server = spawn(
   process.execPath,
-  ["node_modules/next/dist/bin/next", "start", "--hostname", "127.0.0.1"],
+  [
+    "node_modules/next/dist/bin/next",
+    "start",
+    "--hostname",
+    "127.0.0.1",
+    "--port",
+    process.env.GAPSOUND_PORT || "3100",
+  ],
   { stdio: "inherit", env: process.env },
 );
 for (const signal of ["SIGINT", "SIGTERM"] as const)

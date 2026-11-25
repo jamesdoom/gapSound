@@ -66,10 +66,11 @@ function responseFixture(
   status: number,
   chunks: string[] = [],
   encoding?: string,
+  retryAfter?: string,
 ) {
   const response = Object.assign(new EventEmitter(), {
     statusCode: status,
-    headers: { "content-encoding": encoding },
+    headers: { "content-encoding": encoding, "retry-after": retryAfter },
     destroy: vi.fn(),
   });
   const req = Object.assign(new EventEmitter(), {
@@ -117,6 +118,13 @@ describe("bounded HTTPS transport", () => {
     await expect(fetchPublicFeed(url, [url], 15000, 8)).rejects.toThrow(
       "size limit",
     );
+  });
+  it("preserves Retry-After from the response for persistent scheduling", async () => {
+    responseFixture(503, [], undefined, "7200");
+    await expect(fetchPublicFeed(url, [url])).rejects.toMatchObject({
+      status: 503,
+      retryAfter: "7200",
+    });
   });
   it("does not accept unexpected compression", async () => {
     responseFixture(200, [], "gzip");

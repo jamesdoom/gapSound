@@ -36,7 +36,10 @@ export async function resolvePublicAddress(
 }
 
 export class SourceHttpError extends Error {
-  constructor(public readonly status: number) {
+  constructor(
+    public readonly status: number,
+    public readonly retryAfter?: string,
+  ) {
     super(`Source returned HTTP ${status}`);
   }
 }
@@ -86,7 +89,12 @@ export function fetchPublicFeed(
       },
       (response) => {
         if (response.statusCode !== 200) {
-          reject(new SourceHttpError(response.statusCode ?? 0));
+          reject(
+            new SourceHttpError(
+              response.statusCode ?? 0,
+              response.headers["retry-after"],
+            ),
+          );
           response.destroy();
           return;
         }

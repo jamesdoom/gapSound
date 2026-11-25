@@ -1,12 +1,15 @@
-const localHosts = new Set(["127.0.0.1:3000", "localhost:3000"]);
+export function localEndpoints(port = process.env.GAPSOUND_PORT || "3000") {
+  if (!/^\d{1,5}$/.test(port) || Number(port) < 1024 || Number(port) > 65535)
+    throw new Error("Invalid local port");
+  const hosts = [`127.0.0.1:${port}`, `localhost:${port}`];
+  return { hosts, origins: hosts.map((host) => `http://${host}`) };
+}
 export function validateRequest(request: Request) {
+  const local = localEndpoints();
   const host = request.headers.get("host");
-  if (!host || !localHosts.has(host)) throw new Error("Untrusted host");
+  if (!host || !local.hosts.includes(host)) throw new Error("Untrusted host");
   const origin = request.headers.get("origin");
-  if (
-    origin &&
-    !["http://127.0.0.1:3000", "http://localhost:3000"].includes(origin)
-  )
+  if (origin && !local.origins.includes(origin))
     throw new Error("Untrusted origin");
   const site = request.headers.get("sec-fetch-site");
   if (site && site !== "same-origin" && site !== "none")

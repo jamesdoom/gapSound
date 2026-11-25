@@ -6,6 +6,9 @@ test("intelligence search, filter, bookmarks and read state survive reload", asy
   await expect(
     page.getByRole("heading", { name: "Command Center", exact: true }),
   ).toBeVisible();
+  await expect(
+    page.getByText(/Retry eligible:.*2 consecutive failures/),
+  ).toBeVisible();
   await page
     .getByRole("navigation")
     .getByRole("button", { name: "Threat Intelligence" })
