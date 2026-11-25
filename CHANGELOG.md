@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.9 — 2026-11-25
+
+- Added explicit RSS/Atom/RDF normalization, safe relative links, URL deduplication, entity decoding, numeric-text preservation and strict publication-date handling.
+- Kept summaries optional and avoided copying WordPress/Atom full-content fields.
+- Rejected unsupported/unusable feeds and bounded XML depth/size while preserving transactional source isolation and article state.
+- Added synthetic source-shape fixtures, adversarial normalization tests and live read-only smoke checks for all three approved RSS sources.
+
 ## 0.1.8 — 2026-11-25
 
 - Added CVE identifiers found in article titles/summaries, linked to CVE Program records and explicitly labeled as unverified source mentions.

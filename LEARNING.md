@@ -1,5 +1,13 @@
 # Security learning notes
 
+## Normalize evidence without inventing facts
+
+`src/services/feed-normalization.ts` separates parsing from fetching and persistence. XML text conversion is disabled so numeric titles are not lost. Entity decoding makes metadata readable, while DTD rejection, disabled custom entity expansion, size/depth limits and React escaping maintain separate defenses. Hidden script/style content and full article bodies are not retained as summaries. Unknown or timezone-less dates stay unknown; Atom updated is modification evidence, not publication evidence.
+
+`tests/feed-normalization.test.ts` uses synthetic source-shape fixtures and covers malformed dates, unsupported documents, URL/field limits and unsafe XML. `tests/ingestion.test.ts` verifies refresh state preservation and independent source success after a format failure. A failed source cannot legitimately gain a new last-success timestamp. These tests do not prove all XML variants or parser vulnerabilities are covered; XHTML constructs and XML base inheritance remain unsupported. See docs/FEED_NORMALIZATION.md.
+
+**Question:** Why is substituting ingestion time for a missing publication date misleading, even when both timestamps are valid?
+
 ## Separate identifier mentions from evidence
 
 `src/lib/cves.ts` recognizes bounded CVE syntax in stored titles/summaries, normalizes case and removes duplicates. It rejects malformed/embedded/overlong identifiers and caps output at 20 per article. It does not verify that a record exists. `src/services/intelligence.ts` checks page mentions against the local KEV table in one query; the UI separately labels that local evidence. Neither a source mention nor a keyword match proves the user's exposure. The local catalog can be stale; provenance/freshness still matters. References are built from validated identifier characters, not untrusted URLs.

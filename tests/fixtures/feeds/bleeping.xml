@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Synthetic fixture modeled on BleepingComputer's observed RSS description and offset dates. -->
+<rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/"><channel><title>Demonstration news</title>
+<item><title>Patch &quot;now&quot;: CVE-2099-11111</title><link>/news/demo</link><description>&lt;p&gt;A &amp; B &lt;strong&gt;guidance&lt;/strong&gt;&lt;/p&gt;</description><pubDate>Wed, 25 Nov 2026 11:13:40 -0500</pubDate></item>
+<item><title>Duplicate entry</title><link>/news/demo</link><description>Should not overwrite first entry</description></item>
+<item><title>Unsafe link</title><link>javascript:alert(1)</link></item>
+</channel></rss>

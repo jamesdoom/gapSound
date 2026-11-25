@@ -2,17 +2,17 @@
 
 ## Status
 
-Phase 1 remains in progress. Latest update: source-attributed CVE mentions and persistent literal-term watchlists (GS-004, still in progress pending feed normalization). GS-003 still needs source policy review. GS-002 now has automated accessibility and keyboard checks; real assistive-technology review and full application process-restart coverage remain.
+Phase 1 remains in progress. Latest update: bounded RSS/Atom/RDF normalization and source-shape fixtures; GS-004 intelligence discovery is complete. GS-003 still needs source policy review. GS-002 now has automated accessibility and keyboard checks; real assistive-technology review and full application process-restart coverage remain.
 
 Vercel Authentication was verified to protect all deployments in the previous update. Hosting remains unsupported for real application use until storage/auth architecture is adapted. No Vercel settings or paid services were changed this session. Git pushes may trigger the user's existing protected Vercel build integration.
 
 ## Current verification
 
-- 104 tests across 15 Vitest files passed, including migration upgrades, HTTP header parsing, source isolation, SQLite close/reopen persistence, successful recovery and exact loopback-port checks.
+- 121 tests across 16 Vitest files passed, including migration upgrades, HTTP header parsing, source isolation, SQLite close/reopen persistence, successful recovery and exact loopback-port checks.
 - TypeScript (including production build), lint and production build passed.
 - All 22 Chrome browser tests passed on isolated loopback port 3100: axe default-rule scans across six screens at 1280/320px, keyboard skip/search/collapsed navigation and focus, success announcements, and eight workflow tests including CVE/KEV labeling, watchlist create/reload/edit/removal, and paging/date filters. All views passed horizontal-overflow checks. Desktop/mobile screenshots were inspected. The user's server on port 3000 was left alone.
-- Migration 0004 added watchlist and child-term tables without changing existing article or personal records. Repeated application and upgrades from an existing schema are covered by tests.
-- No live public feed calls were made in this update. The prior update verified 35 articles and 1,796 KEV records from four sources in an isolated database.
+- No migration was needed for normalization. Migration 0004 remains the latest schema version. Repeated application and upgrades from an existing schema are covered by tests.
+- A separate read-only smoke check normalized 35 live entries from the three approved RSS sources, all with valid publication dates. No user database writes were performed. Routine tests use deterministic fixtures only.
 
 ## Behavior and limitations
 
@@ -20,7 +20,7 @@ Failures delay the next eligible refresh by 15 minutes, 30 minutes, 1 hour and p
 
 Retention is manual: Settings previews unbookmarked metadata ingested more than 90 days ago, with up to 400 IDs and a 15-minute preview expiry. Deletion rechecks current bookmarks and age. Notes, study records, sources and KEV remain outside cleanup. No cleanup ran against user data; migration 0003 only added an index. There is no automatic deletion, undo or secure erasure. Source feeds may reintroduce removed records.
 
-Remaining Phase 1 work: provider-policy review; manual assistive-technology/zoom review and application restart tests; feed normalization; full persisted daily briefings; richer CVE research; note editing and training improvements; secret scanning and backup/restore verification. Notes currently display Markdown as plain text. The app remains single-user/local-first.
+Remaining Phase 1 work: provider-policy review; manual assistive-technology/zoom review and application restart tests; full persisted daily briefings; richer CVE research; note editing and training improvements; secret scanning and backup/restore verification. Notes currently display Markdown as plain text. The app remains single-user/local-first.
 
 ## Run instructions
 
@@ -41,7 +41,7 @@ Browser tests require Playwright Chromium or PLAYWRIGHT_CHANNEL=chrome, use a fr
 
 ## Next action and learning
 
-Continue GS-003 source-policy review or GS-002 application process-restart coverage. See LEARNING.md for how persisted deadlines prevent refresh clicks or restarts from bypassing provider rate limits. Question: why is an in-memory timer insufficient to enforce Retry-After after an application restart?
+Next: GS-005 complete deterministic daily briefings, or the outstanding GS-003 policy / GS-002 process-restart checks. See LEARNING.md for how persisted deadlines prevent refresh clicks or restarts from bypassing provider rate limits. Question: why is an in-memory timer insufficient to enforce Retry-After after an application restart?
 
 ## CI repair
 
@@ -64,3 +64,9 @@ Threat Intelligence provides a Manage watchlists link, creation/editing/confirme
 A prefilled terms field now uses an explicit accessible label reference. Lint excludes generated browser/data directories, avoiding a traversal race when Playwright recreates its result directory. User records were not removed; tests use isolated databases.
 
 Final verification for CVE/watchlists: 104 tests across 15 Vitest files, all 22 Chrome browser tests, explicit typecheck, lint and production build passed. Migration 0004 applied. To try the features, restart the dev server and open Threat Intelligence → Manage watchlists.
+
+## Feed normalization update
+
+Normalization now has explicit RSS/Atom/RDF roots and field rules, numeric-text preservation, known-entity decoding, safe relative links, URL deduplication, bounded metadata and timezone/calendar validation. Atom modification dates are not publication dates. Full WordPress/Atom content is ignored. Unsupported documents and nonempty unusable feeds fail without advancing successful freshness; independent feeds continue. XML size/depth and DTD protections remain enforced. Refreshes preserve bookmark/read state, IDs for unchanged URLs and first-ingestion time; source attribution reflects the latest supplying feed. Existing rows are not backfilled. See docs/FEED_NORMALIZATION.md for limits, including unsupported XHTML and XML base inheritance.
+
+Verified: 121 automated tests, 22 browser tests, lint, explicit typecheck and production build passed. Read-only source smoke check: SANS 10 entries (4 summaries), Krebs 10 (10 summaries), BleepingComputer 15 (15 summaries); all publication dates valid and URLs unique within each feed. Entities 9.0.0 is now a direct dependency; install reported zero vulnerabilities. No migration or user-data cleanup ran.

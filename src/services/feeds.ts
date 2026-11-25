@@ -1,10 +1,7 @@
-import { createHash } from "node:crypto";
-import { XMLParser, XMLValidator } from "fast-xml-parser";
 import { z } from "zod";
 import { db } from "../db";
 import { articles, sources, vulnerabilities } from "../db/schema";
 import { eq } from "drizzle-orm";
-import { plainText, safeUrl } from "../lib/security";
 import { fetchPublicFeed, SourceHttpError } from "../lib/feed-network";
 import {
   failureSchedule,
@@ -34,50 +31,8 @@ export const feedSources = [
     url: "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json",
   },
 ] as const;
-export function classify(text: string) {
-  for (const [pattern, category] of [
-    [/ransomware/i, "Ransomware"],
-    [/phish/i, "Phishing"],
-    [/malware/i, "Malware"],
-    [/breach/i, "Data breach"],
-    [/\bCVE\b|CVE-|vulnerab/i, "Vulnerability"],
-    [/\bAI\b|LLM/i, "AI security"],
-  ] as const)
-    if (pattern.test(text)) return category;
-  return "Threat intelligence";
-}
-export function normalizeFeed(xml: string) {
-  if (/<!DOCTYPE|<!ENTITY/i.test(xml) || XMLValidator.validate(xml) !== true)
-    throw new Error("Invalid or unsafe XML");
-  const parsed = new XMLParser({
-    ignoreAttributes: true,
-    processEntities: false,
-  }).parse(xml);
-  const raw = parsed?.rss?.channel?.item ?? [];
-  const list = Array.isArray(raw) ? raw : [raw];
-  return list.slice(0, 100).flatMap((item: Record<string, unknown>) => {
-    const url = typeof item.link === "string" ? safeUrl(item.link) : null;
-    const title =
-      typeof item.title === "string" ? plainText(item.title).slice(0, 500) : "";
-    if (!url || !title) return [];
-    const summary =
-      typeof item.description === "string"
-        ? plainText(item.description).slice(0, 1500)
-        : "";
-    const date =
-      typeof item.pubDate === "string" ? new Date(item.pubDate) : null;
-    return [
-      {
-        id: createHash("sha256").update(url).digest("hex"),
-        title,
-        url,
-        summary,
-        category: classify(`${title} ${summary}`),
-        publishedAt: date && !isNaN(date.getTime()) ? date.toISOString() : null,
-      },
-    ];
-  });
-}
+export { classify, normalizeFeed } from "./feed-normalization";
+import { normalizeFeed } from "./feed-normalization";
 const kevSchema = z.object({
   vulnerabilities: z
     .array(
@@ -183,13 +138,17 @@ export async function persistSource(
           .onConflictDoUpdate({ target: vulnerabilities.id, set: value });
       }
     } else {
-      for (const article of normalizeFeed(text))
+      for (const article of normalizeFeed(
+        text,
+        feedSources.find((source) => source.id === sourceId)?.url,
+      ))
         await tx
           .insert(articles)
           .values({ ...article, sourceId: sourceId, ingestedAt: now })
           .onConflictDoUpdate({
             target: articles.url,
             set: {
+              sourceId,
               title: article.title,
               summary: article.summary,
               category: article.category,

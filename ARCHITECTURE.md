@@ -49,3 +49,7 @@ The workspace delegates article queries to src/services/intelligence.ts. A share
 Article pages derive CVE mentions from bounded stored metadata; no full-content scrape or external lookup runs. Mentions are normalized/deduplicated and cross-checked against the local KEV table with one bounded query for the page. The UI labels source mentions and local KEV evidence separately. These derived references need no backfill or extra article table.
 
 Migration 0004 adds watchlists and child terms with referential integrity and uniqueness. Services save edits atomically and bound list/term counts. Watchlist queries add literal instr conditions to existing filters and pagination, and return matched terms for explanation. The matching rule is OR across terms, AND with other filters; SQLite case folding is ASCII. No regex engine, notifications or background task is created. Removing a list removes only its terms, not articles.
+
+## Feed normalization boundary
+
+Pure normalization lives in src/services/feed-normalization.ts, separately from hardened network transport and transactional persistence. Known RSS/Atom/RDF roots and field contracts are validated before per-entry conversion; text/date/URL policies are explicit. Entities is a direct production dependency for bounded known-entity decoding, not custom XML entity execution. See docs/FEED_NORMALIZATION.md for formats, resource bounds, source fixtures and limitations.

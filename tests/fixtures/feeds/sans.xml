@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Synthetic fixture modeled on SANS ISC's observed title/link/guid/pubDate fields. -->
+<rss version="2.0"><channel><title>Demonstration ISC</title>
+<item><title>123</title><link>https://example.com/isc/123?a=1&amp;b=2</link><guid>demo-123</guid><pubDate>Wed, 25 Nov 2026 02:00:03 GMT</pubDate></item>
+</channel></rss>

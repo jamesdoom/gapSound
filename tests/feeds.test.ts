@@ -15,12 +15,12 @@ describe("feed normalization", () => {
       )[0].id,
     ).toBe(items[0].id);
   });
-  it("ignores unsafe links", () =>
-    expect(
+  it("rejects feeds containing only unsafe links", () =>
+    expect(() =>
       normalizeFeed(
         "<rss><channel><item><title>XSS</title><link>javascript:alert(1)</link></item></channel></rss>",
       ),
-    ).toEqual([]));
+    ).toThrow("no usable"));
   it("rejects entity declarations", () =>
     expect(() =>
       normalizeFeed(
@@ -30,7 +30,7 @@ describe("feed normalization", () => {
   it("bounds ingestion count", () =>
     expect(
       normalizeFeed(
-        `<rss><channel>${"<item><title>Test</title><link>https://example.com/a</link></item>".repeat(150)}</channel></rss>`,
+        `<rss><channel>${Array.from({ length: 150 }, (_, i) => `<item><title>Test</title><link>https://example.com/a/${i}</link></item>`).join("")}</channel></rss>`,
       ),
     ).toHaveLength(100));
   it("classifies using explainable keywords", () =>

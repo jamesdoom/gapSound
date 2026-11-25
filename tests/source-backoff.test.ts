@@ -38,7 +38,7 @@ it("isolates 429/503 failures, persists across reopen, skips early retries and r
   let client = createClient({ url });
   let clockTime = start;
   const clock = () => new Date(clockTime);
-  const healthy = "<rss><channel></channel></rss>";
+  const healthy = "<rss><channel><title>Demonstration</title></channel></rss>";
   const fetcher = vi.fn(async (url: string) => {
     if (url.includes("isc.sans")) throw new SourceHttpError(429, "7200");
     if (url.includes("cisa.gov"))

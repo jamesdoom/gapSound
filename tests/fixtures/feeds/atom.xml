@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Synthetic Atom fixture; updated is not a publication timestamp. -->
+<atom:feed xmlns:atom="http://www.w3.org/2005/Atom"><atom:title>Demonstration Atom</atom:title>
+<atom:entry><atom:title type="html">Defense &amp;amp; research</atom:title><atom:link rel="self" href="https://example.com/api/entry"/><atom:link rel="alternate" type="text/html" href="https://example.com/atom/demo"/><atom:summary type="html">&lt;p&gt;Short summary&lt;/p&gt;</atom:summary><atom:published>2026-11-25T10:00:00-05:00</atom:published><atom:updated>2026-11-25T17:00:00Z</atom:updated></atom:entry>
+<atom:entry><atom:title>Updated only</atom:title><atom:link href="https://example.com/atom/unknown"/><atom:updated>2026-11-25T17:00:00Z</atom:updated><atom:content src="https://example.com/never-fetch">Do not use full content</atom:content></atom:entry>
+</atom:feed>

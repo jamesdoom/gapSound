@@ -6,6 +6,8 @@ A local cybersecurity intelligence and training workspace. The name reflects def
 
 ## Available now
 
+- Hardened RSS/Atom/RDF metadata normalization with source-shape fixtures, entity decoding, safe-link deduplication and explicit publication dates. Full article bodies are not copied. See [normalization contracts and limits](docs/FEED_NORMALIZATION.md).
+
 - Article CVE mentions link to the CVE Program. A mention is not proof of a valid record or exploitation; matches in the imported CISA KEV catalog are separately labeled. Only stored title/summary metadata is scanned, not full articles. No extra network lookup is performed.
 - Threat Intelligence watchlists persist up to 50 named lists, each with 1–10 terms (60 characters each). Matches use any literal term in title/summary; English case is ignored. Use the watchlist filter to see matching articles and matched terms. Lists can be edited or removed with confirmation; article data is preserved. There are no automatic alerts or notifications.
 

@@ -17,6 +17,7 @@
   "dependencies": {
     "@libsql/client": "latest",
     "drizzle-orm": "latest",
+    "entities": "^9.0.0",
     "fast-xml-parser": "latest",
     "ipaddr.js": "^2.5.0",
     "lucide-react": "latest",
