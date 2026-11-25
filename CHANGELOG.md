@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.5 — 2026-11-25
+
+- Fixed a Tailwind class collision that hid the sidebar toggle.
+- Added focus management for page changes and skip navigation, explicit collapsed-navigation names and expanded state, and a labeled study progress bar.
+- Added polite success announcements, explicit keyboard focus outlines and larger operational text.
+- Added automated accessibility scans for six screens at desktop and narrow-mobile widths, plus keyboard regression coverage.
+- Documented review scope and remaining assistive-technology limitations in docs/ACCESSIBILITY.md.
+
 ## 0.1.4 — 2026-11-25
 
 - Added manual Settings cleanup for unbookmarked feed metadata ingested more than 90 days ago, with a preview and explicit confirmation.

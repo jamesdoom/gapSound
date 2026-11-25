@@ -60,6 +60,7 @@ function download(name: string, content: string, type: string) {
 }
 export function Dashboard() {
   const [page, setPage] = useState("Command Center");
+  const previousPage = useRef(page);
   const [collapsed, setCollapsed] = useState(false);
   const [data, setData] = useState<Data>();
   const [query, setQuery] = useState("");
@@ -70,6 +71,8 @@ export function Dashboard() {
   const [pending, setPending] = useState(false);
   const [loading, setLoading] = useState(true);
   const [now, setNow] = useState<Date>();
+  const [announcement, setAnnouncement] = useState("");
+  const heading = useRef<HTMLHeadingElement>(null);
   const search = useRef<HTMLInputElement>(null);
   const loadVersion = useRef(0);
   const load = useCallback(async () => {
@@ -100,6 +103,7 @@ export function Dashboard() {
     async (body: Record<string, unknown>) => {
       setPending(true);
       setError("");
+      setAnnouncement("");
       try {
         const response = await fetch("/api/workspace", {
           method: "POST",
@@ -109,6 +113,17 @@ export function Dashboard() {
         const result = await response.json();
         if (!response.ok) throw new Error(result.error);
         await load();
+        const messages: Record<string, string> = {
+          refresh: "Source refresh finished. Check source status for results.",
+          article: "Article updated.",
+          task: "Study objective added.",
+          "toggle-task": "Study objective updated.",
+          start: "Study session started.",
+          stop: "Study session stopped.",
+          note: "Research note saved.",
+          settings: "Preferences saved.",
+        };
+        setAnnouncement(messages[String(body.action)] ?? "Changes saved.");
         return true;
       } catch (e) {
         setError(e instanceof Error ? e.message : "Action failed");
@@ -168,7 +183,12 @@ export function Dashboard() {
     setSource("");
     setCategory("");
     setSaved(false);
+    setAnnouncement("");
   };
+  useEffect(() => {
+    if (previousPage.current !== page) heading.current?.focus();
+    previousPage.current = page;
+  }, [page]);
   function noteForm(form: HTMLFormElement) {
     const values = new FormData(form);
     void mutate({
@@ -405,7 +425,12 @@ export function Dashboard() {
           {studyMinutes} / {goal} min
         </strong>
       </div>
-      <progress value={studyMinutes} max={goal} />
+      <progress
+        aria-label="Completed study minutes toward weekly goal"
+        aria-valuetext={`${studyMinutes} of ${goal} minutes`}
+        value={studyMinutes}
+        max={goal}
+      />
       <p className="small muted">
         Completed session time. Weekly goal: {data?.settings?.weeklyHours ?? 15}{" "}
         hours.
@@ -428,17 +453,20 @@ export function Dashboard() {
           )}
         </div>
         <button
-          className="collapse"
+          className="nav-toggle"
           aria-label={collapsed ? "Expand navigation" : "Collapse navigation"}
+          aria-expanded={!collapsed}
+          aria-controls="main-navigation"
           onClick={() => setCollapsed(!collapsed)}
         >
           {collapsed ? <Menu size={18} /> : <X size={18} />}
         </button>
         <div className="nav-label">WORKSPACE</div>
-        <nav aria-label="Main navigation">
+        <nav id="main-navigation" aria-label="Main navigation">
           {nav.map((item) => (
             <button
               key={item.title}
+              aria-label={item.title}
               className={page === item.title ? "active" : ""}
               title={collapsed ? item.title : undefined}
               aria-current={page === item.title ? "page" : undefined}
@@ -494,11 +522,21 @@ export function Dashboard() {
             <Shield size={14} /> LOCAL ONLY
           </span>
         </header>
-        <main id="main">
+        <main id="main" tabIndex={-1}>
+          <p
+            className="sr-only"
+            role="status"
+            aria-live="polite"
+            aria-atomic="true"
+          >
+            {announcement}
+          </p>
           <div className="page-heading">
             <div>
               <div className="eyebrow">YOUR DEFENSIVE ADVANTAGE</div>
-              <h1>{page}</h1>
+              <h1 ref={heading} tabIndex={-1}>
+                {page}
+              </h1>
               <p>
                 {page === "Command Center"
                   ? brand.tagline

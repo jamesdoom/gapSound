@@ -1,5 +1,13 @@
 # Security learning notes
 
+## Accessible controls support deliberate security decisions
+
+The workspace now moves focus to new screen headings, supports a focusable skip-link destination, labels study progress, explicitly names collapsed navigation and announces successful saves without moving form focus. A keyboard regression test exposed a real class collision: Tailwind's collapse utility hid the navigation toggle. It now uses the distinct nav-toggle class. These changes keep important controls and feedback available without a mouse; they do not change authorization or input validation.
+
+Review `src/components/dashboard.tsx`, `src/app/globals.css` and `e2e/accessibility.spec.ts`. Tests scan all six screens at desktop and 320px widths with axe's default rules, verify reflow, exercise skip/search/navigation by keyboard and check success feedback. Passing these tests is not a WCAG conformance claim: real screen-reader, forced-colors and zoom assessments remain. See docs/ACCESSIBILITY.md.
+
+**Question:** Why can an automated accessibility scan pass even when a hidden but essential control is unusable?
+
 ## Making cleanup deliberate and bounded
 
 `src/services/retention.ts` selects only unbookmarked article metadata older than 90 days by ingestion time. Publication dates are untrusted and may describe very old articles that were just imported, so they do not determine eligibility. The browser previews IDs and requires confirmation; the server validates the request, restricts age again, expires old previews and rechecks bookmark state in the DELETE predicate. A bookmark added after preview protects that record. Only previewed IDs can be deleted, up to 400, fitting the API's 32 KiB input budget. `src/app/api/retention/route.ts` applies the same local Host/Origin boundary as other mutations.

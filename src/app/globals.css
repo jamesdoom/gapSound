@@ -1,4 +1,9 @@
 @import "tailwindcss";
+/* Keyboard focus stays visible independently of browser default styles. */
+:focus-visible {
+  outline: 2px solid #81ebbc;
+  outline-offset: 4px;
+}
 :root {
   color-scheme: dark;
   --bg: #0c1017;
@@ -159,7 +164,7 @@ kbd {
   color: #8f9dab;
   margin-top: 1px;
 }
-.collapse {
+.nav-toggle {
   border: 0;
   background: transparent;
   align-self: flex-end;
@@ -796,7 +801,7 @@ footer span:first-child {
   .brand {
     padding: 0;
   }
-  .collapse,
+  .nav-toggle,
   .planned-label,
   .planned,
   .sidebar-foot,
@@ -895,5 +900,45 @@ footer span:first-child {
   *::after {
     animation: none !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/* Keep operational labels and timestamps readable at every breakpoint. */
+.article-top,
+.article-footer,
+.article-footer button,
+.source-status,
+.source-status small,
+.metrics span,
+.metrics small,
+.filters select,
+.filters button,
+.tag,
+.date,
+.date small,
+.progress-label,
+.panel > p.small,
+.input-row input,
+.search-box input {
+  font-size: 0.875rem;
+}
+.eyebrow,
+.nav-label,
+.planned .small,
+footer {
+  font-size: 0.75rem;
+}
+.article-footer {
+  flex-wrap: wrap;
+}
+.filters select {
+  max-width: 100%;
+}
+@media (max-width: 740px) {
+  .metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .search-box kbd {
+    display: none;
   }
 }

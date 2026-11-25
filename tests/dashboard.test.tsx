@@ -18,7 +18,9 @@ it("shows actionable database errors without hiding the workspace", async () => 
     }),
   );
   render(<Dashboard />);
-  expect(screen.getByRole("status").textContent).toContain("Loading");
+  expect(screen.getByText("Loading your workspace…").textContent).toContain(
+    "Loading",
+  );
   expect((await screen.findByRole("alert")).textContent).toContain(
     "npm run db:migrate",
   );

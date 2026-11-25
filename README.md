@@ -53,11 +53,13 @@ Stop GapSound before backup or restore. Copy the entire `data` directory to a pr
 - Notes currently display Markdown as safe plain text. Editing/deleting notes is pending.
 - Local workspace has no authentication, encryption at rest or public hosting support. Browser tabs may share the same database. Do not place sensitive incident data here.
 - Source fetching validates and pins DNS answers to public addresses. See SECURITY.md for remaining platform and local-process risks.
-- Browser tests cover persisted workflows, malicious note content, mobile overflow and API security boundaries. Full accessibility review and process-restart persistence tests remain pending.
+- Browser tests cover persisted workflows, malicious note content, mobile overflow and API security boundaries. Real screen-reader/zoom/forced-colors review and process-restart persistence tests remain pending; automated desktop/mobile scans and keyboard tests are included.
 
-See HANDOFF.md for current results and next work. No screenshots are included until browser review is completed.
+See HANDOFF.md for current results and next work. Desktop/mobile screenshots were reviewed as local test artifacts; they contain synthetic test records and are not live intelligence screenshots.
 
 ## Browser regression tests
+
+The browser suite includes axe scans and keyboard/reflow checks for implemented screens. Review scope and remaining manual checks are documented in [docs/ACCESSIBILITY.md](docs/ACCESSIBILITY.md); passing automation is not a conformance claim.
 
 ```powershell
 npm run build
