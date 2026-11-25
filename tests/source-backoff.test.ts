@@ -88,3 +88,39 @@ it("isolates 429/503 failures, persists across reopen, skips early retries and r
     client.close();
   }
 });
+
+it("keeps SANS hourly across successful and failed attempts even when manual refresh runs every 15 minutes", async () => {
+  const client = createClient({ url: ":memory:" });
+  try {
+    await migrateDatabase(client);
+    const database = drizzle(client, { schema });
+    const fetcher = vi.fn(async (url: string) =>
+      url.includes("cisa.gov")
+        ? '{"vulnerabilities":[]}'
+        : "<rss><channel/></rss>",
+    );
+    await ingest(database, fetcher, () => new Date(start));
+    fetcher.mockClear();
+    await ingest(database, fetcher, () => new Date(start + 15 * 60000));
+    expect(fetcher).toHaveBeenCalledTimes(3);
+    expect(fetcher.mock.calls.some(([url]) => url.includes("isc.sans"))).toBe(
+      false,
+    );
+    fetcher.mockClear();
+    await ingest(database, fetcher, () => new Date(start + 3600000));
+    expect(fetcher.mock.calls.some(([url]) => url.includes("isc.sans"))).toBe(
+      true,
+    );
+    const failed = vi.fn(async () => {
+      throw new Error("Synthetic failure");
+    });
+    await ingest(database, failed, () => new Date(start + 7200000));
+    const [sans] = await database
+      .select()
+      .from(schema.sources)
+      .where((await import("drizzle-orm")).eq(schema.sources.id, "sans"));
+    expect(sans.nextAttemptAt).toBe(new Date(start + 10800000).toISOString());
+  } finally {
+    client.close();
+  }
+});

@@ -16,6 +16,7 @@ import {
   generateBriefingInput,
 } from "../lib/briefings";
 import { safeUrl } from "../lib/security";
+import { feedMinimumMs } from "../lib/source-policy";
 import { feedSources } from "./feeds";
 export class BriefingError extends Error {}
 export async function generateBriefing(
@@ -117,7 +118,7 @@ export async function generateBriefing(
         ? "error"
         : !Number.isFinite(success)
           ? "missing"
-          : age < 0 || age > freshnessMs
+          : age < 0 || age > Math.max(freshnessMs, feedMinimumMs(source.id) * 2)
             ? "stale"
             : "fresh";
       return {

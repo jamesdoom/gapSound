@@ -1,13 +1,10 @@
+import { feedMinimumMs } from "../lib/source-policy";
 import { z } from "zod";
 import { db } from "../db";
 import { articles, sources, vulnerabilities } from "../db/schema";
 import { eq } from "drizzle-orm";
 import { fetchPublicFeed, SourceHttpError } from "../lib/feed-network";
-import {
-  failureSchedule,
-  MIN_RETRY_MS,
-  sourceCanRefresh,
-} from "../lib/feed-retry";
+import { failureSchedule, sourceCanRefresh } from "../lib/feed-retry";
 
 export const feedSources = [
   {
@@ -69,13 +66,14 @@ export async function ingest(
       .select()
       .from(sources)
       .where(eq(sources.id, source.id));
-    if (!sourceCanRefresh(previous, clock().getTime())) continue;
+    const minimumMs = feedMinimumMs(source.id);
+    if (!sourceCanRefresh(previous, clock().getTime(), minimumMs)) continue;
     const now = clock().toISOString();
     await database
       .update(sources)
       .set({
         lastAttempt: now,
-        nextAttemptAt: new Date(Date.parse(now) + MIN_RETRY_MS).toISOString(),
+        nextAttemptAt: new Date(Date.parse(now) + minimumMs).toISOString(),
       })
       .where(eq(sources.id, source.id));
     try {
@@ -99,6 +97,7 @@ export async function ingest(
             previous.consecutiveFailures,
             clock().getTime(),
             retryAfter,
+            minimumMs,
           ),
         })
         .where(eq(sources.id, source.id));

@@ -9,7 +9,7 @@ The Command Center's **Generate today’s briefing** action creates a versioned 
 - The leading news item becomes a source-backed investigation prompt, with instructions to separate supported attack-vector evidence from unknowns. No attack details are generated.
 - A curated learning focus, official CISA link and short assessment with a revealable answer remain useful without AI.
 - Today's stored objectives and up to three recently completed objectives are captured. Review prompts are suggestions, **not scheduled due dates**. Spaced-repetition scheduling is not implemented in Phase 1.
-- Source status is captured at generation: fresh, stale, error or missing. Freshness uses twice the configured refresh interval. Coverage is explicitly incomplete; missing records do not establish that no events occurred.
+- Source status is captured at generation: fresh, stale, error or missing. Freshness uses twice the larger of the configured refresh interval and the source minimum (60 minutes for SANS, 15 for other configured feeds). Coverage is explicitly incomplete; missing records do not establish that no events occurred.
 
 ## Persistence and history
 

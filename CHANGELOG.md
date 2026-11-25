@@ -103,3 +103,9 @@
 - Added paginated combined CISA/CVE browsing, literal vendor/severity filters and persistent saved vulnerabilities.
 - Added explicit unknown/rejected/unavailable/freshness states and preserved last-good records on failures.
 - Migration 0008 stores lookup records, saved markers and persisted cooldown/provider state.
+
+### Publisher feed readiness review
+
+- Recorded primary-source terms/robots/rate findings for SANS, Krebs, BleepingComputer, CISA KEV and the CVE Program, with explicit unresolved reuse/notice gates.
+- Enforced a conservative hourly SANS request/failure floor, including legacy attempts; kept briefing freshness consistent with source floors.
+- Added Settings publisher-policy guidance and source links. No migration or publisher outreach.

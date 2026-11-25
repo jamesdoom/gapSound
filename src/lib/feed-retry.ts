@@ -23,11 +23,12 @@ export function failureSchedule(
   previousFailures: number,
   now: number,
   retryAfter?: string,
+  minimumMs = MIN_RETRY_MS,
 ) {
   const consecutiveFailures = Math.min(32, Math.max(0, previousFailures) + 1);
   const backoff = Math.min(
     MAX_BACKOFF_MS,
-    MIN_RETRY_MS * 2 ** (consecutiveFailures - 1),
+    Math.max(MIN_RETRY_MS, minimumMs) * 2 ** (consecutiveFailures - 1),
   );
   return {
     consecutiveFailures,
@@ -39,10 +40,12 @@ export function failureSchedule(
 export function sourceCanRefresh(
   source: { lastAttempt: string | null; nextAttemptAt: string | null },
   now: number,
+  minimumMs = MIN_RETRY_MS,
 ) {
   return (
     (!source.lastAttempt ||
-      now >= Date.parse(source.lastAttempt) + MIN_RETRY_MS) &&
+      now >=
+        Date.parse(source.lastAttempt) + Math.max(MIN_RETRY_MS, minimumMs)) &&
     (!source.nextAttemptAt || now >= Date.parse(source.nextAttemptAt))
   );
 }

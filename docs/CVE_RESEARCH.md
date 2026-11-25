@@ -25,7 +25,7 @@ Manual lookups reuse successful records for 24 hours unless **Refresh CVE record
 
 Transport reuses public-DNS checking/address pinning, TLS hostname validation, no redirects and a 15-second/2-MiB body limit. The lookup cache is capped at 5,000 identifiers, including failed attempts; existing KEV entries are preserved separately. Display projections bound affected products/versions, metrics, CWE IDs and references (up to 20 each, with up to 20 versions per product). Text lengths are bounded and normalized snapshots are reduced below 180,000 characters; truncation is flagged with a link to the full CVE record. Text is escaped by React, with no raw HTML/media or executable content. All mutations require the existing local Host/Origin boundary and bounded JSON.
 
-These conservative application limits are not claims about a published provider quota or service agreement. The [official repository](https://github.com/CVEProject/cvelistV5) links to [CVE Terms of Use](https://www.cve.org/Legal/TermsOfUse). Full source-by-source terms/rate-policy release review remains tracked in GS-003; this update verifies public endpoint behavior and format, not legal compliance or availability guarantees.
+These conservative application limits are not claims about a published provider quota or service agreement. The [official repository](https://github.com/CVEProject/cvelistV5) links to [CVE Terms of Use](https://www.cve.org/Legal/TermsOfUse). The dated publisher review is recorded in [SOURCE_POLICIES.md](SOURCE_POLICIES.md). GS-003 retains unresolved reuse/notice packaging gates; endpoint/format verification is not legal compliance or an availability guarantee.
 
 ## Persistence and checks
 

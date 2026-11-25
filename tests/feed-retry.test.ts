@@ -65,3 +65,33 @@ describe("retry policy", () => {
     ).toBe(false);
   });
 });
+
+it("enforces a publisher floor on legacy timestamps, failures and longer Retry-After", () => {
+  const hour = 3600000;
+  expect(
+    sourceCanRefresh(
+      {
+        lastAttempt: new Date(now).toISOString(),
+        nextAttemptAt: new Date(now + MIN_RETRY_MS).toISOString(),
+      },
+      now + MIN_RETRY_MS,
+      hour,
+    ),
+  ).toBe(false);
+  expect(
+    sourceCanRefresh(
+      { lastAttempt: new Date(now).toISOString(), nextAttemptAt: null },
+      now + hour,
+      hour,
+    ),
+  ).toBe(true);
+  expect(
+    Date.parse(failureSchedule(0, now, undefined, hour).nextAttemptAt),
+  ).toBe(now + hour);
+  expect(
+    Date.parse(failureSchedule(1, now, undefined, hour).nextAttemptAt),
+  ).toBe(now + 2 * hour);
+  expect(Date.parse(failureSchedule(0, now, "7200", hour).nextAttemptAt)).toBe(
+    now + 2 * hour,
+  );
+});

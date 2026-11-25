@@ -31,7 +31,7 @@ npm run db:migrate
 npm run dev
 ```
 
-Open http://127.0.0.1:3000. Click **Refresh sources** to populate intelligence; a clean install contains no demonstration telemetry. Refresh runs automatically at the configured interval while the browser workspace remains open. Sources have a minimum 15-minute cooldown. Consecutive failures back off for 15 minutes, 30 minutes, 1 hour, and progressively up to 24 hours. HTTP 429/503 Retry-After delays take precedence when longer; waiting periods survive restarts. Refresh is attempted at the next manual or automatic refresh after eligibility, not by a background timer. No background daemon runs after the workspace closes.
+Open http://127.0.0.1:3000. Click **Refresh sources** to populate intelligence; a clean install contains no demonstration telemetry. Refresh runs automatically at the configured interval while the browser workspace remains open. SANS has a 60-minute minimum cooldown; other feeds have a 15-minute minimum. Consecutive failures double from each source floor up to 24 hours. HTTP 429/503 Retry-After delays take precedence when longer; waiting periods survive restarts. Refresh is attempted at the next manual or automatic refresh after eligibility, not by a background timer. No background daemon runs after the workspace closes.
 
 ```powershell
 npm run typecheck
@@ -89,3 +89,5 @@ Daily Training preserves unfinished sessions across restarts and midnight. Use *
 Research Notebook supports revision-checked editing, normalized tag filters, safe Markdown/preview and paginated JSON/Markdown exports. See [notebook behavior and limits](docs/NOTEBOOK.md).
 
 CVE Watchtower supports manual authoritative CVE Program lookup, provenance-labeled CVSS v3/v4 assessments, vendor/severity filters, saved vulnerabilities and explicit unknown/unavailable states. See [CVE research behavior and limits](docs/CVE_RESEARCH.md). No API key is required.
+
+Publisher policies are documented in [the dated review register](docs/SOURCE_POLICIES.md) and shown in Settings. SANS requests are limited to once per hour even with faster settings/manual refresh; other feeds retain a 15-minute app floor. This local reader is not cleared for public redistribution; unresolved publisher notice/reuse gates remain tracked in GS-003.

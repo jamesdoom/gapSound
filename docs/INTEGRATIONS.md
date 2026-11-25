@@ -1,5 +1,9 @@
 # Integration contracts and verification
 
+**Current policy review (November 25, 2026):** see [Publisher review register](SOURCE_POLICIES.md). SANS has a server-enforced 60-minute floor; other RSS/KEV sources keep a 15-minute app floor, with longer Retry-After/backoff honored. Local reader use is distinct from redistribution permission. Krebs reuse and CVE notice/license packaging remain explicit release gates; GS-003 is not fully closed.
+
+## Historical contract and transport checks
+
 Configured public endpoints, reviewed November 25, 2026:
 
 | Source                     | Endpoint                                                                            | Contract                                     | Initial web verification                                                                                   |

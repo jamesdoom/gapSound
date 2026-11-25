@@ -25,6 +25,7 @@ import {
   Target,
   X,
 } from "lucide-react";
+import { sourcePolicies } from "@/lib/source-policy";
 import { brand } from "@/lib/brand";
 import type { workspace } from "@/services/workspace";
 type Data = Awaited<ReturnType<typeof workspace>>;
@@ -956,8 +957,10 @@ export function Dashboard() {
                   />
                 </label>
                 <p className="muted">
-                  Refresh runs while this workspace is open. Each source has a
-                  minimum 15-minute cooldown, including failed attempts.
+                  Refresh runs while this workspace is open. SANS has a
+                  60-minute minimum; other feeds have a 15-minute minimum.
+                  Manual refresh and failed attempts respect these floors and
+                  any longer provider delay.
                 </p>
                 <button className="primary" disabled={pending}>
                   Save preferences
@@ -966,6 +969,41 @@ export function Dashboard() {
               <hr />
               <RetentionPanel onChange={load} />
               <hr />
+              <h3>Publisher policies</h3>
+              <p className="small muted">
+                Reviewed November 25, 2026 for this personal, local reader.
+                Public or commercial redistribution is not cleared. Publisher
+                terms can change; robots rules are not a copyright license.
+              </p>
+              {sourcePolicies.map((policy) => (
+                <div className="article publisher-policy" key={policy.id}>
+                  <h4>{policy.name}</h4>
+                  <p className="small muted">{policy.scope}</p>
+                  <p className="small muted">
+                    Minimum request interval: {policy.minRefreshMinutes} minutes
+                    · {policy.attribution}
+                  </p>
+                  <a
+                    href={policy.policyUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {policy.name} policy source
+                  </a>
+                </div>
+              ))}
+              <p className="small muted">
+                CVE Program data has separate MITRE notice/license conditions.
+                Its lookup spacing is an app limit, not a verified publisher
+                quota.{" "}
+                <a
+                  href="https://www.cve.org/Legal/TermsOfUse"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  CVE terms of use
+                </a>
+              </p>
               <h3>Local by design</h3>
               <p className="muted">
                 No AI provider is connected. Data stays in your local SQLite

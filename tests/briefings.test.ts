@@ -215,3 +215,40 @@ it("validates local calendar days, timezones, snapshot links and unsafe content 
     client.close();
   }
 });
+
+it("keeps source freshness aligned with a publisher floor when preferences request faster checks", async () => {
+  const { client, db } = await fixture();
+  try {
+    const { eq } = await import("drizzle-orm");
+    await db
+      .update(schema.settings)
+      .set({ refreshMinutes: 15 })
+      .where(eq(schema.settings.id, "local"));
+    const timestamp = new Date(now.getTime() - 45 * 60000).toISOString();
+    await db.insert(schema.sources).values([
+      {
+        id: "sans",
+        name: "SANS",
+        url: "https://isc.sans.edu/rssfeed.xml",
+        lastSuccess: timestamp,
+      },
+      {
+        id: "krebs",
+        name: "Krebs",
+        url: "https://krebsonsecurity.com/feed/",
+        lastSuccess: timestamp,
+      },
+    ]);
+    await generateBriefing(input, db, now);
+    const snapshot = (await readBriefings(input.day, 1, undefined, db)).view!
+      .snapshot;
+    expect(snapshot.sources.find((s) => s.name.includes("SANS"))?.status).toBe(
+      "fresh",
+    );
+    expect(snapshot.sources.find((s) => s.name.includes("Krebs"))?.status).toBe(
+      "stale",
+    );
+  } finally {
+    client.close();
+  }
+});

@@ -1119,3 +1119,7 @@ summary {
 .cve-panel li {
   margin: 8px 0;
 }
+
+.publisher-policy {
+  overflow-wrap: anywhere;
+}

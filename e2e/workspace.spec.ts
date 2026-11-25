@@ -129,6 +129,18 @@ test("settings persist and mobile navigation fits the viewport", async ({
     .getByRole("button", { name: "Settings" })
     .click();
   await expect(page.getByLabel("Weekly study goal (hours)")).toHaveValue("12");
+  await expect(
+    page.getByRole("heading", { name: "Publisher policies", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("link", {
+      name: "SANS Internet Storm Center policy source",
+      exact: true,
+    }),
+  ).toHaveAttribute("href", "https://isc.sans.edu/feeds_doc.html");
+  await expect(
+    page.getByText(/Minimum request interval: 60 minutes/),
+  ).toBeVisible();
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= window.innerWidth,
