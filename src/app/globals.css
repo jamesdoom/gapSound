@@ -1123,3 +1123,80 @@ summary {
 .publisher-policy {
   overflow-wrap: anywhere;
 }
+
+@media (forced-colors: active) {
+  button,
+  .primary,
+  .primary:hover {
+    color: ButtonText;
+    background: ButtonFace;
+    border-color: ButtonText;
+  }
+  input,
+  select,
+  textarea {
+    color: FieldText;
+    background: Field;
+    border-color: FieldText;
+  }
+  a {
+    color: LinkText;
+    text-decoration: underline;
+  }
+  button:disabled {
+    color: GrayText;
+    border-color: GrayText;
+    opacity: 1;
+  }
+  .sidebar nav button.active {
+    color: ButtonText;
+    background: ButtonFace;
+    border: 2px solid Highlight;
+    font-weight: 700;
+  }
+  .nav-dot {
+    display: none;
+  }
+  :focus-visible {
+    outline: 3px solid Highlight;
+    outline-offset: 4px;
+  }
+  .tag,
+  .warning {
+    border-color: CanvasText;
+  }
+}
+
+.workspace.collapsed .nav-title {
+  display: none;
+}
+@media (max-width: 740px) {
+  .sidebar nav {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    overflow: visible;
+  }
+  .sidebar nav button {
+    white-space: normal;
+    min-width: 0;
+    width: 100%;
+    text-align: left;
+  }
+  .sidebar nav button svg {
+    flex-shrink: 0;
+  }
+  .workspace.collapsed .sidebar nav button {
+    width: 100%;
+  }
+  .workspace.collapsed .nav-title {
+    display: inline;
+  }
+}
+
+@media (forced-colors: active) {
+  .sidebar nav button,
+  .sidebar .nav-title {
+    color: ButtonText;
+  }
+}

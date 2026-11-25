@@ -61,7 +61,7 @@ Stop GapSound before backup or restore. Copy the entire `data` directory to a pr
 - Notes currently display Markdown as safe plain text. Editing/deleting notes is pending.
 - Local workspace has no authentication, encryption at rest or public hosting support. Browser tabs may share the same database. Do not place sensitive incident data here.
 - Source fetching validates and pins DNS answers to public addresses. See SECURITY.md for remaining platform and local-process risks.
-- Browser tests cover persisted workflows, malicious note content, mobile overflow and API security boundaries. Real screen-reader/zoom/forced-colors review and process-restart persistence tests remain pending; automated desktop/mobile scans and keyboard tests are included.
+- Browser tests cover persisted workflows, malicious note content, mobile overflow and API security boundaries. Full Next.js process-restart, reflow and forced-colors regressions are included. Native screen-reader/zoom/contrast-theme signoff remains pending after a Computer Use safety block; see docs/ACCESSIBILITY.md.
 
 See HANDOFF.md for current results and next work. Desktop/mobile screenshots were reviewed as local test artifacts; they contain synthetic test records and are not live intelligence screenshots.
 
@@ -91,3 +91,5 @@ Research Notebook supports revision-checked editing, normalized tag filters, saf
 CVE Watchtower supports manual authoritative CVE Program lookup, provenance-labeled CVSS v3/v4 assessments, vendor/severity filters, saved vulnerabilities and explicit unknown/unavailable states. See [CVE research behavior and limits](docs/CVE_RESEARCH.md). No API key is required.
 
 Publisher policies are documented in [the dated review register](docs/SOURCE_POLICIES.md) and shown in Settings. SANS requests are limited to once per hour even with faster settings/manual refresh; other feeds retain a 15-minute app floor. This local reader is not cleared for public redistribution; unresolved publisher notice/reuse gates remain tracked in GS-003.
+
+Full application restart and forced-colors/reflow regressions run with npm run test:e2e. For the remaining native manual checks, npm run test:a11y:manual starts an isolated synthetic workspace on 127.0.0.1:3102 with publisher requests held by cooldowns. See [review evidence and the manual checklist](docs/ACCESSIBILITY.md); automated reflow and emulation do not replace screen-reader/native zoom/theme signoff.

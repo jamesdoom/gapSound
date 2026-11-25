@@ -2,34 +2,33 @@
 
 ## Status
 
-Phase 1 remains in progress. Latest completed update: publisher policy review, source-specific refresh floors and visible policy guidance. GS-006 vulnerability research remains implemented. Notebook editing/tags/export/Markdown (partial GS-007) remains implemented. Training session recovery and day rollover remain implemented. GS-004 intelligence discovery and GS-005 persistent deterministic briefings are complete. Scheduled due reviews are also implemented. Remaining work includes configurable objectives (GS-007), remaining publisher reuse/notice release gates (GS-003), broader full application restart/manual assistive coverage (GS-002) and release acceptance (GS-008). No Phase 2 work is authorized.
+Phase 1 remains in progress. Latest update: full application persistence regression and accessibility improvements; native manual signoff remains incomplete after a Computer Use safety block. Publisher policy review/source floors remain implemented. GS-006 vulnerability research remains implemented. Notebook editing/tags/export/Markdown (partial GS-007) remains implemented. Training session recovery and day rollover remain implemented. GS-004 intelligence discovery and GS-005 persistent deterministic briefings are complete. Scheduled due reviews are also implemented. Remaining work includes configurable objectives (GS-007), remaining publisher reuse/notice release gates (GS-003), native manual assistive/zoom/theme signoff (GS-002) and release acceptance (GS-008). No Phase 2 work is authorized.
 
 The app remains local-first, single-user and bound to 127.0.0.1:3000. The existing protected Vercel deployment remains unsupported for application use until storage/access architecture is adapted. No hosting settings, paid services, AI providers or authentication changed. Git pushes may trigger the user's existing protected build integration.
 
 ## Latest behavior
 
-The requested publisher terms/rate review is recorded in docs/SOURCE_POLICIES.md, with primary links, review date, robots observations, scope limits and unresolved items. Settings → Publisher policies shows source guidance and attribution. No publisher outreach or public/commercial use was authorized.
+The browser suite now restarts the actual production Next.js server against one isolated database, checks a new PID and a stopped endpoint, then verifies persisted articles/read/bookmarks, completed objectives/preferences, unfinished sessions/source retry deadlines, edited notebook content/revisions/tag index, watchlists, reviews, saved CVEs/cached lookup and saved briefing identity/content. It completes the session/review and archives the briefing, restarts again and verifies those later states. The scenario runs on test-owned loopback port 3101; the regular suite stays on 3100. No application control/shutdown endpoint was added. Child processes are created/terminated by the test itself and their startup/shutdown waits are bounded.
 
-SANS static-feed guidance recommends hourly downloads. Its scope is not an express diary-RSS prose license; the application conservatively applies a 60-minute floor to the existing SANS RSS endpoint. Other configured feeds retain a 15-minute application floor. Krebs robots requests 35 seconds; BleepingComputer's generic group requests one second. These hints are distinct from a copyright license or API quota. No numeric CISA KEV or single-record CVE API quota was verified, and the separate Search API beta quota was not applied here.
+Accessibility automation now covers six screens at 1280, 640 and 320 CSS pixels with default axe rules, no horizontal page/nav overflow and keyboard/focus checks. Widths 640/320 exercise the layout equivalent to 200%/400% of a 1280 baseline; they are not actual native browser zoom operations. Twelve forced-colors emulation cases cover 1280/320, with system-palette control/field/link/disabled/focus styles and a border/font-weight cue for active navigation. Agent review of captured emulation images found clipped mobile labels; mobile navigation now wraps in two columns and exposes labels even after desktop collapse. Final image review is not a human screen-reader or native Windows theme pass.
 
-Server eligibility now checks the source floor against lastAttempt even for older rows whose nextAttemptAt was created with the former 15-minute default. New attempts persist the matching floor. Failure backoff starts at that floor and doubles up to 24 hours, with longer Retry-After taking precedence. Manual refresh and browser preferences cannot bypass this check. Saved briefing freshness now uses twice the larger of the preference and source floor; existing snapshots remain unchanged.
+Native Windows input was stopped by the Computer Use helper because it could not confidently verify the current browser URL for policy enforcement. No further desktop app input was attempted. NVDA was absent in the standard paths checked; Narrator was not launched and no spoken output was verified. **Screen-reader speech, real browser zoom and native Windows contrast-theme signoff remain pending.** GS-002 is still in progress. See docs/ACCESSIBILITY.md for the exact barrier, skill guidance and the concrete remaining checklist.
 
-The review found an explicit CC0 license for KEV in CISA's official repository. BleepingComputer has publisher-provided RSS and personal/non-commercial storage provisions, alongside redistribution restrictions. Krebs advertises its RSS feed, but broader reuse permission was not found. CVE usage terms have MITRE copyright/license reproduction conditions. The review is complete, but **GS-003 is not fully closed**: broader Krebs reuse, exact CVE notice/license packaging and required notices/rights before distributing publisher-derived content remain release gates. Do not describe the app as cleared for public reuse. See the register for evidence and remaining actions.
+A new npm run test:a11y:manual command starts a synthetic temporary workspace at http://127.0.0.1:3102 without changing the user's database or shell environment. Review-only seeding holds feed/provider requests for two days and sets automatic refresh to 1440 minutes; this is a short-review safeguard, not a permanent offline mode. The kit was started and smoke-tested: a manual refresh kept all configured feed lastAttempt values unchanged and an uncached CVE lookup returned 429 before networking. The temporary server was stopped afterward. No desktop/browser settings or app security boundaries were weakened.
 
-No schema migration, dependency change, feed ingestion or personal-data deletion was required. Existing articles, bookmarks and archived briefings were preserved. Public robots files and Krebs RSS-discovery HTML were read using bounded, identified HTTPS requests; CISA webpage 403s were not bypassed, and CISA's official repository supplied licensing evidence instead. Historical transport/ingest observations remain in docs/INTEGRATIONS.md.
-
-CVE research (migration 0008), notebook workflows (0007), scheduled reviews and training recovery/day rollover remain implemented. Configurable training objectives remain pending. No Phase 2 implementation or hosting/security setting changed.
+No schema migration or dependency installation was needed. Seeding was extracted from scripts/prepare-e2e.ts into scripts/seed-e2e.ts for reuse by ordinary tests, restart tests and the manual kit. Existing private data and development port 3000 were not used. Phase 1 remains incomplete; configurable objectives, publisher notice/reuse gates and release security/backup acceptance remain open.
 
 ## Verification actually executed
 
 - 151 automated tests across 24 Vitest files passed.
-- Type checking, lint without warnings and production build passed. Git whitespace check passed before commit.
-- All 28 Chrome browser tests passed against the final build on isolated loopback port 3100, including Settings policy assertions and desktop/mobile accessibility/overflow checks.
-- New tests verify source-floor eligibility for legacy rows, exact hourly boundaries, failure backoff and longer Retry-After, end-to-end SANS ingestion attempts at 15-minute/one-hour intervals, and briefing freshness with 15-minute preferences.
-- Settings browser assertions verify the policy section, SANS primary-source link and hourly floor; desktop/mobile axe and overflow coverage remains in the suite.
-- No live publisher services are contacted by routine tests. Review-only HTTPS reads returned 200 robots files for SANS/Krebs/BleepingComputer, a 404 for the CVE API host's robots, and publisher-advertised RSS discovery on the Krebs homepage. No article content was ingested into the user's database during this review.
+- Type checking, lint without warnings and production build passed. Git whitespace verification passed before commit.
+- Full 48-test Chrome browser suite passed, including the full application restart scenario, three-width normal reflow matrix, twelve forced-color cases, collapsed-to-mobile labels and existing workflows.
+- A final explicit system-color refinement for navigation text and extra in-viewport label assertions were followed by a successful production build, typecheck/lint and all 12 targeted forced-color cases. Updated captured Settings/navigation images were reviewed afterward.
+- Agent visual review inspected forced-color captured images for the implemented screens and a normal 640px Command Center rendering. These are artifacts from controlled Chrome emulation, not native Windows screenshots or aural screen-reader evidence.
+- Tests initially exposed primary-button author-color issues under forced colors and an incorrect mouse-modality focus assertion; system palette styles and keyboard-mode setup fixed these. New overflow assertions also needed a named Main navigation selector because article pagination is a second navigation landmark.
+- Manual kit startup/cooldown checks passed and its server was stopped. No routine test makes live publisher requests, and no personal database was mutated.
 
-Prior hosted CI repair was verified at https://github.com/jamesdoom/gapSound/actions/runs/45652241919 with no annotations. Current update checks ran locally; no new hosted CI result is claimed. Dependency versions were unchanged; the prior notebook dependency audit reported zero vulnerabilities.
+Prior hosted CI repair was verified at https://github.com/jamesdoom/gapSound/actions/runs/45652241919 with no annotations. Current update checks ran locally; no new hosted CI result is claimed. Package changes add a local review script only; dependency versions and lockfile remain unchanged. Prior dependency audit reported zero vulnerabilities.
 
 ## Persistent briefing/review behavior
 
@@ -39,9 +38,9 @@ New version-2 briefings capture up to 100 unfinished due/overdue reviews plus th
 
 - Complete configurable training objectives; the requested notebook workflows are implemented.
 - Resolve the specific publisher reuse/notice gates in docs/SOURCE_POLICIES.md before claiming GS-003 complete or distributing publisher data.
-- Complete full application restart coverage for remaining workflows; prior training backend restart verification did not launch/restart the entire Next.js server.
+- Complete native screen-reader speech, real browser zoom and Windows contrast-theme review using the isolated manual kit; Computer Use blocked the desktop attempt in this session.
 - Complete backup/restore verification, secret scanning and final dependency/security review.
-- Manual screen-reader, zoom and forced-colors checks remain; axe passing is not WCAG certification.
+- Automated and visual-emulation checks do not certify WCAG conformance; native manual signoff remains separate.
 - CVE and notebook reads are paginated. Feed refresh lacks a cross-process lock/retry jitter; CVE lookups use persisted leases/cooldowns but no background queue.
 - Private study text may appear in retained briefing snapshots and backups. No encryption at rest, undo or secure erasure is provided. Recovery of already completed sessions is not supported.
 
@@ -51,7 +50,7 @@ Restart the dev server to load this update:
 
     npm run dev
 
-No new migration is needed for this update (0008 remains current). Open http://127.0.0.1:3000 → Settings → Publisher policies. A shorter automatic interval still cannot force an hourly SANS request early. General checks:
+No new migration is needed (0008 remains current). Normal development remains http://127.0.0.1:3000. For a synthetic manual review workspace, run npm run test:a11y:manual after a production build and open http://127.0.0.1:3102; stop with Ctrl+C. General checks:
 
     npm test
     npm run typecheck
@@ -59,6 +58,6 @@ No new migration is needed for this update (0008 remains current). Open http://1
     npm run build
     npm run test:e2e
 
-Browser tests use a new temporary database on port 3100 and can run alongside the user's development server on 3000. Install Playwright Chromium or set PLAYWRIGHT_CHANNEL=chrome. Normal npm works in the user's VS Code terminal; only the restricted agent shell needs the bundled npm CLI fallback. No global configuration changes are required.
+Browser tests use new temporary databases on ports 3100/3101 and can run alongside the user's development server on 3000. Install Playwright Chromium or set PLAYWRIGHT_CHANNEL=chrome. Normal npm works in the user's VS Code terminal; only the restricted agent shell needs the bundled npm CLI fallback. No global configuration changes are required.
 
-Learning question: why are feed availability, robots crawl guidance and a content-reuse license three different kinds of evidence?
+Learning question: why do a new application process, emulated forced colors and an accessibility tree each prove different things, and why does none replace listening to screen-reader output?

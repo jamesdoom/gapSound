@@ -109,3 +109,10 @@
 - Recorded primary-source terms/robots/rate findings for SANS, Krebs, BleepingComputer, CISA KEV and the CVE Program, with explicit unresolved reuse/notice gates.
 - Enforced a conservative hourly SANS request/failure floor, including legacy attempts; kept briefing freshness consistent with source floors.
 - Added Settings publisher-policy guidance and source links. No migration or publisher outreach.
+
+### Application persistence and accessibility verification
+
+- Added full Next.js stop/restart regression coverage against one isolated database across the main persisted workflows.
+- Added 640px reflow and forced-colors tests, system-palette control/focus styles and wrapping mobile navigation.
+- Added an isolated manual accessibility review kit on loopback port 3102 with publisher cooldown guards.
+- Recorded the Computer Use safety block and kept native screen-reader/zoom/contrast-theme signoff pending.

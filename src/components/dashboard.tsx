@@ -680,7 +680,7 @@ export function Dashboard() {
               onClick={() => changePage(item.title)}
             >
               <item.icon size={19} />
-              {!collapsed && item.title}
+              <span className="nav-title">{item.title}</span>
               {!collapsed && page === item.title && (
                 <span className="nav-dot" />
               )}
