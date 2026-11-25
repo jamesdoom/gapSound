@@ -1,4 +1,6 @@
 "use client";
+import { PublisherNotices } from "./publisher-notices";
+import { sourceAttribution } from "@/lib/publisher-notices";
 import { RetentionPanel } from "./retention-panel";
 import { WatchlistPanel } from "./watchlist-panel";
 import { ReviewPanel } from "./review-panel";
@@ -418,6 +420,14 @@ export function Dashboard() {
                   ))}
                 </ul>
               </div>
+            )}
+            {sourceAttribution(item.sourceId) && (
+              <p className="small muted">{sourceAttribution(item.sourceId)}</p>
+            )}
+            {item.publisherNotice && (
+              <p className="notice-text small">
+                Publisher-supplied notice: {item.publisherNotice}
+              </p>
             )}
             <div className="article-footer">
               <span title={`Ingested: ${stamp(item.ingestedAt)}`}>
@@ -1006,6 +1016,7 @@ export function Dashboard() {
                   CVE terms of use
                 </a>
               </p>
+              <PublisherNotices />
               <h3>Local by design</h3>
               <p className="muted">
                 No AI provider is connected. Data stays in your local SQLite

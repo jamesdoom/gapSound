@@ -1,4 +1,5 @@
 "use client";
+import { PublisherNotices } from "./publisher-notices";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { readBriefings } from "@/services/briefings";
 type Data = Awaited<ReturnType<typeof readBriefings>>;
@@ -154,6 +155,11 @@ export function BriefingPanel({
                     : ""}
                 </p>
                 {item.summary && <p>{item.summary}</p>}
+                {item.publisherNotice && (
+                  <p className="small notice-text">
+                    Publisher-supplied notice: {item.publisherNotice}
+                  </p>
+                )}
               </li>
             ))}
           </ul>
@@ -294,6 +300,18 @@ export function BriefingPanel({
             ))}
           </ul>
         </div>
+      )}
+      {snapshot && (
+        <>
+          {!snapshot.publisherNotices && (
+            <p className="small muted">
+              Supplemental publisher notices are shown for this legacy snapshot;
+              its saved contents have not been changed. Publisher-supplied feed
+              notices were not captured in older snapshots.
+            </p>
+          )}
+          <PublisherNotices bundle={snapshot.publisherNotices} />
+        </>
       )}
       <details className="briefing-history">
         <summary>Briefing history ({data?.pagination.total ?? 0})</summary>

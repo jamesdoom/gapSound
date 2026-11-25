@@ -37,6 +37,7 @@ export const sources = sqliteTable("sources", {
   nextAttemptAt: text("next_attempt_at"),
 });
 export const articles = sqliteTable("articles", {
+  publisherNotice: text("publisher_notice"),
   id: text("id").primaryKey(),
   sourceId: text("source_id")
     .notNull()
@@ -51,6 +52,10 @@ export const articles = sqliteTable("articles", {
     .notNull()
     .default(false),
   read: integer("read", { mode: "boolean" }).notNull().default(false),
+});
+export const datasetNotices = sqliteTable("dataset_notices", {
+  id: text("id").primaryKey(),
+  document: text("document").notNull(),
 });
 export const vulnerabilities = sqliteTable("vulnerabilities", {
   id: text("id").primaryKey(),

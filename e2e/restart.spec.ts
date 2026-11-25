@@ -261,6 +261,9 @@ test("full Next.js restart preserves the complete personal workspace", async ({
     );
     expect(article.bookmarked).toBe(true);
     expect(article.read).toBe(true);
+    expect(article.publisherNotice).toBe(
+      "Synthetic publisher notice retained for tests.",
+    );
     expect(
       after.sources.find((s: { id: string }) => s.id === "fixture-delay")
         .nextAttemptAt,
@@ -296,6 +299,11 @@ test("full Next.js restart preserves the complete personal workspace", async ({
       await context.request.get("/api/briefings?day=" + day)
     ).json();
     expect(briefAfter.currentId).toBe(briefing.id);
+    expect(
+      briefAfter.view.snapshot.publisherNotices.items.find(
+        (notice: { id: string }) => notice.id === "cve",
+      ).text,
+    ).toContain("MITRE hereby grants");
     expect(briefAfter.view.snapshot).toEqual(briefingBefore.view.snapshot);
     await page
       .getByRole("navigation")

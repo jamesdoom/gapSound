@@ -102,3 +102,32 @@ describe("untrusted metadata boundaries", () => {
     ).toThrow();
   });
 });
+
+it("retains RSS/RDF/Atom rights as plain text and rejects oversized or unsupported notices", () => {
+  const [rss] = normalizeFeed(
+    '<rss><channel><copyright>© Example; all rights retained.</copyright><item><title>Fixture</title><link>https://example.com/a</link><dc:rights xmlns:dc="https://example.com/dc">Item &amp; notice</dc:rights></item></channel></rss>',
+  );
+  expect(rss.publisherNotice).toBe(
+    "© Example; all rights retained.\nItem & notice",
+  );
+  const [atom] = normalizeFeed(
+    '<feed><rights>Feed rights</rights><entry><title>Fixture</title><link href="https://example.com/a"/><rights>Entry rights</rights></entry></feed>',
+  );
+  expect(atom.publisherNotice).toBe("Feed rights\nEntry rights");
+  const [rdf] = normalizeFeed(
+    '<rdf:RDF xmlns:rdf="https://example.com/rdf" xmlns:dc="https://example.com/dc"><channel><dc:rights>RDF rights</dc:rights></channel><item><title>Fixture</title><link>https://example.com/a</link></item></rdf:RDF>',
+  );
+  expect(rdf.publisherNotice).toBe("RDF rights");
+  expect(() =>
+    normalizeFeed(
+      "<rss><channel><copyright>" +
+        "x".repeat(5001) +
+        "</copyright><item><title>Fixture</title><link>https://example.com/a</link></item></channel></rss>",
+    ),
+  ).toThrow("notice exceeds");
+  expect(() =>
+    normalizeFeed(
+      '<feed><rights><div>Structured rights</div></rights><entry><title>Fixture</title><link href="https://example.com/a"/></entry></feed>',
+    ),
+  ).toThrow("structured publisher notice");
+});

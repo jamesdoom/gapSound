@@ -6,12 +6,20 @@ import { constants } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { z } from "zod";
+import {
+  publisherNotices,
+  publisherNoticeSchema,
+} from "../lib/publisher-notices";
 
 const manifestSchema = z.object({
   format: z.literal(1),
   createdAt: z.string().datetime(),
   sha256: z.string().regex(/^[a-f0-9]{64}$/),
   migrations: z.array(z.string().regex(/^\d{4}$/)).max(1000),
+  publisherNoticesSha256: z
+    .string()
+    .regex(/^[a-f0-9]{64}$/)
+    .optional(),
 });
 async function digest(file: string) {
   const hash = createHash("sha256");
@@ -53,16 +61,38 @@ export async function backupDatabase(source: string, destination: string) {
   }
   const snapshot = open(join(destination, "gapsound.db"));
   let migrations: string[];
+  let noticeDocument = JSON.stringify(publisherNotices);
   try {
     migrations = await verify(snapshot);
+    if (
+      (
+        await snapshot.execute(
+          "SELECT name FROM sqlite_master WHERE type='table' AND name='dataset_notices'",
+        )
+      ).rows.length
+    ) {
+      const row = (
+        await snapshot.execute(
+          "SELECT document FROM dataset_notices WHERE id='publisher'",
+        )
+      ).rows[0];
+      if (!row || String(row.document).length > 50000)
+        throw new Error("Stored publisher notices are missing or oversized");
+      noticeDocument = JSON.stringify(
+        publisherNoticeSchema.parse(JSON.parse(String(row.document))),
+      );
+    }
   } finally {
     snapshot.close();
   }
+  const noticeFile = join(destination, "publisher-notices.json");
+  await writeFile(noticeFile, noticeDocument, { flag: "wx", mode: 0o600 });
   const manifest = {
     format: 1,
     createdAt: new Date().toISOString(),
     sha256: await digest(join(destination, "gapsound.db")),
     migrations,
+    publisherNoticesSha256: await digest(noticeFile),
   };
   await writeFile(
     join(destination, "manifest.json"),
@@ -87,6 +117,21 @@ export async function restoreDatabase(bundle: string, destination: string) {
     throw new Error(
       "Backup checksum mismatch; do not use this restore directory",
     );
+  if (manifest.publisherNoticesSha256) {
+    const noticeFile = join(destination, "publisher-notices.json");
+    if ((await stat(join(bundle, "publisher-notices.json"))).size > 100000)
+      throw new Error("Publisher notice bundle too large");
+    await copyFile(
+      join(bundle, "publisher-notices.json"),
+      noticeFile,
+      constants.COPYFILE_EXCL,
+    );
+    if ((await digest(noticeFile)) !== manifest.publisherNoticesSha256)
+      throw new Error(
+        "Publisher notice checksum mismatch; do not use this restore directory",
+      );
+    publisherNoticeSchema.parse(JSON.parse(await readFile(noticeFile, "utf8")));
+  }
   const client = open(file);
   try {
     if (

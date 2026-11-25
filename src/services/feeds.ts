@@ -2,7 +2,7 @@ import { feedMinimumMs } from "../lib/source-policy";
 import { z } from "zod";
 import { db } from "../db";
 import { articles, sources, vulnerabilities } from "../db/schema";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { fetchPublicFeed, SourceHttpError } from "../lib/feed-network";
 import { failureSchedule, sourceCanRefresh } from "../lib/feed-retry";
 
@@ -152,6 +152,7 @@ export async function persistSource(
               summary: article.summary,
               category: article.category,
               publishedAt: article.publishedAt,
+              publisherNotice: sql`coalesce(${article.publisherNotice},${articles.publisherNotice})`,
             },
           });
     }

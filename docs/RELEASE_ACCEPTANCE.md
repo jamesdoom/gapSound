@@ -1,6 +1,6 @@
 # Phase 1 release acceptance — November 25, 2026
 
-This is a local development acceptance record, not approval for public deployment or redistribution. Phase 1 remains incomplete: publisher reuse/CVE notice packaging and native screen-reader/zoom/contrast-theme signoff remain open. Configurable objective plans were completed in the subsequent migration-0009 update; see HANDOFF.md for current checks. See TASKS.md and docs/SOURCE_POLICIES.md.
+This is a local development acceptance record, not approval for public deployment or redistribution. Phase 1 remains incomplete: broader publisher reuse permissions and native screen-reader/zoom/contrast-theme signoff remain open. Full reviewed CVE/CISA notice packaging was added in migration 0010; see PUBLISHER_NOTICES.md. Configurable objective plans were completed in the subsequent migration-0009 update; see HANDOFF.md for current checks. See TASKS.md and docs/SOURCE_POLICIES.md.
 
 ## Backup and recovery
 
@@ -10,7 +10,7 @@ From the repository terminal, create a **new directory** for each backup:
 npm run db:backup -- data/backups/2026-11-25-first
 ```
 
-The source is `gapsound.db` under `GAPSOUND_DATA_DIR` (default `data`). SQLite `VACUUM INTO` takes a consistent snapshot including committed WAL data; do not copy a live database file alone. The command verifies SQLite integrity, foreign keys and migration history, then writes `manifest.json` with SHA-256, UTC timestamp and migration IDs. The bundle contains the entire database: notes, settings, saved intelligence, briefings and training history. It does not include source code, dependency files or environment configuration. Keep the corresponding Git revision available. [SQLite documents the snapshot behavior and interrupted-output limitation](https://sqlite.org/lang_vacuum.html).
+The source is `gapsound.db` under `GAPSOUND_DATA_DIR` (default `data`). SQLite `VACUUM INTO` takes a consistent snapshot including committed WAL data; do not copy a live database file alone. The command verifies SQLite integrity, foreign keys and migration history, then writes `manifest.json` with SHA-256, UTC timestamp and migration IDs. New backups also include publisher-notices.json with a manifest SHA-256; restore verifies and copies it when present. Older manifests without that optional field remain readable. The bundle contains the entire database: notes, settings, saved intelligence, briefings and training history. It does not include source code, dependency files or environment configuration. Keep the corresponding Git revision available. [SQLite documents the snapshot behavior and interrupted-output limitation](https://sqlite.org/lang_vacuum.html).
 
 Restore into another **new directory**, preserving both the original and backup:
 

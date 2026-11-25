@@ -3,6 +3,7 @@ import { readTraining } from "./training";
 import { listArticles } from "./intelligence";
 import { listWatchlists } from "./watchlists";
 import { db } from "../db";
+import { publisherNotices } from "../lib/publisher-notices";
 import {
   articles,
   settings,
@@ -60,6 +61,7 @@ export async function workspace(
     .select({ total: sql<number>`count(*)` })
     .from(vulnerabilities);
   return {
+    publisherNotices,
     items: articlePage.items,
     pagination: articlePage.pagination,
     watchlists: await listWatchlists(),

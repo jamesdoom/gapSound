@@ -16,6 +16,7 @@ import {
   generateBriefingInput,
 } from "../lib/briefings";
 import { safeUrl } from "../lib/security";
+import { publisherNotices } from "../lib/publisher-notices";
 import { feedMinimumMs } from "../lib/source-policy";
 import { feedSources } from "./feeds";
 export class BriefingError extends Error {}
@@ -69,6 +70,7 @@ export async function generateBriefing(
           title: article.title,
           url: article.url,
           source,
+          publisherNotice: article.publisherNotice,
           publishedAt: article.publishedAt,
           summary: article.summary.slice(0, 240),
           matchedTerms,
@@ -83,6 +85,7 @@ export async function generateBriefing(
         title: item.title,
         url: item.url,
         source: item.source,
+        publisherNotice: item.publisherNotice,
         publishedAt: item.publishedAt,
         summary: item.summary,
         matchedTerms: item.matchedTerms,
@@ -164,6 +167,7 @@ export async function generateBriefing(
       .from(scheduledReviews)
       .where(dueCondition);
     const snapshot = briefingSnapshot.parse({
+      publisherNotices,
       version: 2,
       dueReviews,
       dueReviewCount: dueCount.total,
@@ -258,6 +262,7 @@ export async function readBriefings(
     if (id && !selected) throw new BriefingError("Briefing no longer exists.");
     return {
       currentId: active?.id ?? null,
+      publisherNotices,
       view: value
         ? {
             id: value.id,

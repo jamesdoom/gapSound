@@ -34,6 +34,7 @@ it("upgrades an existing database without losing user records and only applies o
       "0007",
       "0008",
       "0009",
+      "0010",
     ]);
     expect(await migrateDatabase(client)).toEqual([]);
     expect(

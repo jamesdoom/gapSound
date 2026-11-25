@@ -1,5 +1,12 @@
 # Changelog
 
+## Publisher attribution and license notices — 2026-11-25
+
+- Packaged the full reviewed CVE copyright/license/disclaimers and CISA KEV license with local data, API responses, new CVE/briefing snapshots and downloadable notices.
+- Preserved recognized feed copyright/rights/license fields through article refresh and saved briefings, with bounded plain-text rendering and explicit legacy supplements.
+- Added reviewed migration 0010, native SQL migration parsing and checksum-verified backup notice sidecars while retaining older backup compatibility.
+- Kept broader publisher republication permissions and Phase 1 acceptance open.
+
 ## Configurable training objectives — 2026-11-25
 
 - Added ordered, editable reusable objective plans with revision checks and explicit once-per-day application.

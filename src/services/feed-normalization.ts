@@ -126,13 +126,39 @@ export function normalizeFeed(xml: string, sourceUrl?: string) {
   if (!record(parsed)) throw new Error("Unsupported feed format");
   let entries: unknown[];
   let atom = false;
-  if (record(parsed.rss) && record(parsed.rss.channel))
-    entries = values(parsed.rss.channel.item);
-  else if (record(parsed.feed)) {
+  let channel: Node;
+  if (record(parsed.rss) && record(parsed.rss.channel)) {
+    channel = parsed.rss.channel;
+    entries = values(channel.item);
+  } else if (record(parsed.feed)) {
     atom = true;
+    channel = parsed.feed;
     entries = values(parsed.feed.entry);
-  } else if (record(parsed.RDF)) entries = values(parsed.RDF.item);
-  else throw new Error("Unsupported feed format");
+  } else if (record(parsed.RDF)) {
+    channel = record(parsed.RDF.channel) ? parsed.RDF.channel : {};
+    entries = values(parsed.RDF.item);
+  } else throw new Error("Unsupported feed format");
+  function notices(...nodes: Node[]) {
+    const parts: string[] = [];
+    for (const node of nodes)
+      for (const field of ["copyright", "rights", "license"]) {
+        const supplied = values(node[field]);
+        if (supplied.length > 20) throw new Error("Too many publisher notices");
+        for (const value of supplied) {
+          if (
+            typeof value !== "string" &&
+            (!record(value) || typeof value["#text"] !== "string")
+          )
+            throw new Error("Unsupported structured publisher notice");
+          const notice = feedText(value, 5001);
+          if (notice && !parts.includes(notice)) parts.push(notice);
+        }
+      }
+    const joined = parts.join("\n");
+    if (joined.length > 5000)
+      throw new Error("Publisher notice exceeds size limit");
+    return joined || null;
+  }
   const seen = new Set<string>();
   const result = [];
   for (const entry of entries.slice(0, MAX_ITEMS)) {
@@ -161,6 +187,7 @@ export function normalizeFeed(xml: string, sourceUrl?: string) {
       title,
       url,
       summary,
+      publisherNotice: notices(channel, entry),
       category: classify(`${title} ${summary}`),
       publishedAt: publicationTime(
         atom ? entry.published : (entry.pubDate ?? entry.date),

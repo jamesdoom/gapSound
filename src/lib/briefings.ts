@@ -1,10 +1,12 @@
 import { z } from "zod";
 import { safeUrl } from "./security";
+import { publisherNoticeSchema } from "./publisher-notices";
 const link = z
   .string()
   .max(4000)
   .refine((value) => safeUrl(value) !== null, "Unsafe reference URL");
 const legacySnapshot = z.object({
+  publisherNotices: publisherNoticeSchema.optional(),
   version: z.literal(1),
   day: z.iso.date(),
   timeZone: z.string().max(100),
@@ -16,6 +18,7 @@ const legacySnapshot = z.object({
         title: z.string().max(500),
         url: link,
         source: z.string().max(200),
+        publisherNotice: z.string().max(5000).nullable().optional(),
         publishedAt: z.iso.datetime().nullable(),
         summary: z.string().max(240),
         matchedTerms: z.array(z.string().max(60)).max(5),

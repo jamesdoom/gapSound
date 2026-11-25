@@ -1213,3 +1213,16 @@ summary {
   flex-wrap: wrap;
   gap: 8px;
 }
+
+.publisher-notices {
+  display: grid;
+  gap: 12px;
+  margin-block: 16px;
+  min-width: 0;
+}
+.notice-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font: inherit;
+  max-width: 100%;
+}

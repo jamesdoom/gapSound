@@ -45,6 +45,9 @@ for (let i = 0; i < 103; i++)
       new Date().toISOString(),
     ],
   });
+await db.execute(
+  "UPDATE articles SET publisher_notice='Synthetic publisher notice retained for tests.' WHERE id='fixture-article'",
+);
 // Explicitly synthetic CVE fixtures; no provider calls are made by browser setup.
 const { normalizeCve } = await import("../src/services/cve-normalization");
 const { demonstrationCve } = await import("../tests/fixtures/cve-record");

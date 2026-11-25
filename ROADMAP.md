@@ -13,3 +13,5 @@ Do not implement all future modules simultaneously or deploy publicly.
 Phase 1 release safeguards now include consistent backups, non-overwriting restore verification, redacted history/workspace secret scanning and dependency review. This does not close outstanding Phase 1 acceptance gates; see docs/RELEASE_ACCEPTANCE.md.
 
 GS-007 training/notebook workflows now include configurable ordered objective plans with explicit once-per-day application. Phase 1 acceptance still requires publisher notice/reuse work, native accessibility signoff and final reconciliation.
+
+Publisher notice packaging now propagates full reviewed CVE/CISA notices through storage, API reads, new snapshots and backups. GS-003 still tracks unresolved broader publisher reuse permissions; no public deployment or redistribution is authorized.

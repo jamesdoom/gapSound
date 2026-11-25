@@ -2,11 +2,34 @@
 
 ## Status
 
-Phase 1 remains in progress. Latest update: configurable ordered training objective plans, completing the remaining GS-007 workflow. GS-004 intelligence discovery, GS-005 persistent briefings, GS-006 vulnerability research and GS-007 training/notebook workflows are implemented. Remaining acceptance gates are publisher reuse/CVE notice packaging (GS-003), native screen-reader/zoom/contrast-theme signoff (GS-002), supported-tooling maintenance and final release reconciliation (GS-008). No Phase 2 work is authorized.
+Phase 1 remains in progress. Latest update: full reviewed CVE/CISA notices and publisher attribution through local storage, APIs, new snapshots and backups, plus recognized feed notice retention. GS-007 configurable objective plans remain complete. Remaining acceptance gates are broader publisher reuse permissions (GS-003), native screen-reader/zoom/contrast-theme signoff (GS-002), supported-tooling maintenance and final release reconciliation (GS-008). No Phase 2 work is authorized.
 
 The app remains local-first, single-user and bound to 127.0.0.1:3000. The existing protected Vercel deployment remains unsupported for application use until storage/access architecture is adapted. No hosting settings, paid services, AI providers or authentication changed. Git pushes may trigger the user's existing protected build integration.
 
-## Latest configurable objectives update
+## Latest publisher notice update
+
+Packaged the complete reviewed CVE copyright/license/disclaimers and CISA KEV license in src/lib/publisher-notices.json. Primary CVE terms/footer source was pinned at CVEProject/cve-website commit 9d1ab813f5274ffc136e0bf55e74f9cf1b552da9 and compared with the served website asset; copyright year 2026 is the dated review's explicit value. SANS guidance, Krebs copyright and BleepingComputer terms were rechecked without contacting publishers or collecting article bodies. Exact legal-text fingerprints, links, bounds, scope and remaining gates are in docs/PUBLISHER_NOTICES.md.
+
+Migration 0010 stores the bundle in dataset_notices and adds nullable article publisher_notice. A verified pre-migration backup was created under ignored data/backups/pre-notices-0010, then npm run db:migrate applied 0010 locally. Existing snapshot JSON and personal records were not rewritten/deleted. libSQL transaction.executeMultiple now parses migration scripts natively so license literals can contain semicolons; regression tests prove failed scripts roll back schema/data and migration markers.
+
+New CVE projections embed the full CVE notice. New briefings embed the complete reviewed bundle and per-article notices, while old snapshot views explicitly show supplemental notices without rewriting their saved contents. Settings, article cards and vulnerability/briefing views display attribution and escaped/wrapped notices. GET /api/notices supplies a local-only attachment, and workspace/CVE/briefing API reads carry notices alongside data. URLs are references only; viewing/downloading makes no publisher request. React best-practices review covered the changed components and the shared disclosure component.
+
+Recognized RSS/RDF/Atom copyright/rights/text-license fields are retained as deduplicated plain text, up to 5,000 characters per article. Oversized/unsupported structured notices reject the source import rather than clipping notices. A refresh that omits notices preserves the previously stored notice; a new supplied notice replaces current article metadata. This is not a universal parser for proprietary notices in prose/full articles, and absent legacy notices cannot be reconstructed. Existing bookmarks/read state and saved briefing notices are retained.
+
+New backup bundles include publisher-notices.json and a manifest SHA-256; restore verifies/copies that sidecar when present. Backup uses the snapshot's stored bundle, or supplies the packaged notice for a legacy pre-0010 database without modifying that source. Legacy manifests without the optional field remain readable and are not represented as verified sidecars. Notice packaging covers publisher datasets, not GapSound's source license or dependency distribution obligations. Notebook exports remain user-authored/manually pasted text; arbitrary pasted rights cannot be inferred.
+
+No dependency, paid service, publisher-network runtime call, hosting setting, authentication or Phase 2 change was added. The technical CVE/CISA packaging gate is implemented; broader Krebs reuse and public/commercial SANS/BleepingComputer/publisher-briefing rights remain unresolved. GS-003 remains in progress. Native accessibility signoff is still separate.
+
+## Current verification actually executed
+
+- 166 unit/component tests across 29 files passed with maxWorkers=4, including full-text fingerprints, migration bundle equality, source notice persistence/immutable briefings, inert rendering, SQL literal/rollback handling and notice-sidecar restore/tamper rejection.
+- Final typecheck, lint without warnings and production build passed after the Node-compatible JSON import fix.
+- Focused Chrome notice workflow passed: visible attribution/full CVE license, local download filename/headers, API notice propagation, cross-origin denial, 320px wrapping/default axe, and no external browser requests.
+- The final full Chrome suite passed all 50 tests, including notice download/offline rendering, normal and forced-colors reflow, critical workflows, production restart and backup restore with retained article/briefing notices. The initial full run stopped before tests because Node's ESM restart-test import required an explicit JSON import attribute; the standard with-type-json import fixed that cross-runtime issue and the full unit suite also passed again afterward.
+- Gitleaks scanned all 21 available commits and current non-ignored workspace files with no findings. No hosted CI success is claimed.
+- Local pre-migration backup and migration 0010 succeeded. No dependency installation or personal-data restore was performed.
+
+## Previous configurable objectives update
 
 Daily Training now contains a reusable objective plan with up to 20 distinct ordered titles. The user can add/edit/remove/reorder, save with revision checks, and explicitly apply the saved plan once per local day. Failed saves preserve the draft; Reload saved plan explicitly replaces it. Unsaved changes disable application. Initial loads are abortable and reads create no tasks. The editor uses stable entry keys, labeled controls and status/error announcements; React best-practices review was applied.
 
@@ -14,7 +37,7 @@ Application verifies the current day against the supplied IANA zone and server c
 
 Migration 0009 adds task positions, the revisioned plan and daily application records. A verified pre-migration backup was created in the ignored data/backups/pre-objectives-0009 directory before npm run db:migrate applied 0009 to the local workspace. No personal records were deleted and no restore was performed. Other checkouts must run npm run db:migrate before restarting. No new dependency, external request, hosting change, paid service, authentication or Phase 2 feature was introduced. See docs/TRAINING.md.
 
-## Current verification actually executed
+## Previous objective update verification
 
 - 160 unit/component tests across 27 files passed, including plan validation/order, stale saves, atomic rollback, daily limits, future-day history preservation, immutable briefing snapshots and editor loading/error/draft behavior.
 - Migration regression verifies an existing completed task retains title/day/completion and receives position zero; migration reruns apply nothing.
@@ -77,8 +100,8 @@ New version-2 briefings capture up to 100 unfinished due/overdue reviews plus th
 
 ## Remaining limitations and next actions
 
-- GS-007 configurable objective plans and notebook/training workflows are implemented; proceed with publisher notice packaging, native accessibility signoff and tooling maintenance before final release acceptance.
-- Resolve the specific publisher reuse/notice gates in docs/SOURCE_POLICIES.md before claiming GS-003 complete or distributing publisher data.
+- GS-007 configurable objective plans and notebook/training workflows are implemented; proceed with broader publisher reuse permissions, native accessibility signoff and tooling maintenance before final release acceptance.
+- Full reviewed CVE/CISA notice packaging is implemented. Resolve the remaining broader publisher reuse permissions in docs/SOURCE_POLICIES.md before claiming GS-003 complete or distributing publisher data.
 - Complete native screen-reader speech, real browser zoom and Windows contrast-theme review using the isolated manual kit; Computer Use blocked the desktop attempt in this session.
 - Backup/restore, secret scanning and dependency/security review are implemented; retain their repeatable commands and resolve the remaining GS-002/003 gates before final release acceptance.
 - Plan a compatible ESLint tooling upgrade; the current pinned version has no reported npm advisory but is unsupported.
@@ -92,7 +115,7 @@ Restart the dev server to load this update:
 
     npm run dev
 
-Migration 0009 has been applied locally; other updated checkouts must run npm run db:migrate before restarting. Normal development remains http://127.0.0.1:3000. For a synthetic manual review workspace, run npm run test:a11y:manual after a production build and open http://127.0.0.1:3102; stop with Ctrl+C. General checks:
+Migration 0010 has been applied locally; other updated checkouts must run npm run db:migrate before restarting. Normal development remains http://127.0.0.1:3000. For a synthetic manual review workspace, run npm run test:a11y:manual after a production build and open http://127.0.0.1:3102; stop with Ctrl+C. General checks:
 
     npm test
     npm run typecheck
@@ -102,4 +125,4 @@ Migration 0009 has been applied locally; other updated checkouts must run npm ru
 
 Browser tests use new temporary databases on ports 3100/3101 and can run alongside the user's development server on 3000. Install Playwright Chromium or set PLAYWRIGHT_CHANNEL=chrome. Normal npm works in the user's VS Code terminal; only the restricted agent shell needs the bundled npm CLI fallback. No global configuration changes are required.
 
-Learning question: why should a reusable plan be copied into each daily checklist instead of having historical checklists read the current plan directly?
+Learning question: why do an attribution, a license text and permission to republish represent three different things, and why should a saved snapshot retain the notice captured with it?

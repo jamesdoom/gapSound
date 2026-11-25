@@ -21,10 +21,8 @@ export async function migrateDatabase(
     if (applied.rows.length) continue;
     const tx = await client.transaction("write");
     try {
-      for (const statement of readFileSync(join(directory, filename), "utf8")
-        .split(";")
-        .filter((value) => value.trim()))
-        await tx.execute(statement);
+      // Let SQLite parse SQL literals/comments, including semicolons in notices.
+      await tx.executeMultiple(readFileSync(join(directory, filename), "utf8"));
       await tx.execute({
         sql: "INSERT INTO migrations VALUES (?,?)",
         args: [id, new Date().toISOString()],
