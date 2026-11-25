@@ -1060,3 +1060,30 @@ summary {
 .briefing-content p {
   overflow-wrap: anywhere;
 }
+
+.markdown-body {
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+.markdown-body p {
+  white-space: pre-wrap;
+}
+.markdown-body ul,
+.markdown-body ol {
+  padding-left: 1.5rem;
+}
+.markdown-body pre {
+  overflow: auto;
+  max-width: 100%;
+  padding: 0.75rem;
+  background: #080f17;
+  white-space: pre-wrap;
+}
+.markdown-body blockquote {
+  border-left: 3px solid #528675;
+  padding-left: 1rem;
+  margin: 1rem 0;
+}
+.markdown-body a {
+  text-decoration: underline;
+}

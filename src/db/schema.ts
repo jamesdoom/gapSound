@@ -75,6 +75,8 @@ export const sessions = sqliteTable("sessions", {
   endedAt: text("ended_at"),
 });
 export const notes = sqliteTable("notes", {
+  revision: integer("revision").notNull().default(0),
+  updatedAt: text("updated_at"),
   id: text("id").primaryKey(),
   title: text("title").notNull(),
   body: text("body").notNull(),
@@ -94,3 +96,14 @@ export const scheduledReviews = sqliteTable("scheduled_reviews", {
   createdAt: text("created_at").notNull(),
   completedAt: text("completed_at"),
 });
+
+export const noteTags = sqliteTable(
+  "note_tags",
+  {
+    noteId: text("note_id")
+      .notNull()
+      .references(() => notes.id, { onDelete: "cascade" }),
+    tag: text("tag").notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.noteId, t.tag] })],
+);

@@ -89,3 +89,10 @@
 - Preserved unfinished sessions in the visible history regardless of age; added validated actual-end recovery and protection against stale session controls.
 - Reload daily objectives at local midnight and refresh workspace on focus/visibility return, preserving previous-day plans and active sessions.
 - Clip completed totals to the rolling seven-day window independently of history pagination limits.
+
+### Research notebook workflows
+
+- Added revision-checked editing, preserved creation times and normalized tag indexing/filtering.
+- Added 20-note pagination, per-page JSON and cursor-based all-matching JSON exports beyond 100 notes.
+- Render CommonMark/preview with inert HTML, no images and validated HTTPS links only.
+- Migration 0007 preserves existing note content and indexes legacy tags.

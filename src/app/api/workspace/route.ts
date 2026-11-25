@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
-import { articles, notes, settings, tasks } from "@/db/schema";
+import { articles, settings, tasks } from "@/db/schema";
 import { boundedJson, validateRequest } from "@/lib/security";
 import {
   startSession,
@@ -10,6 +10,8 @@ import {
   stopSessionInput,
   TrainingError,
 } from "@/services/training";
+import { noteInput } from "@/lib/notebook";
+import { saveNote, NotebookError } from "@/services/notebook";
 import { workspace } from "@/services/workspace";
 import { refreshFeeds } from "@/services/feeds";
 import { intelligenceQuery } from "@/lib/intelligence-query";
@@ -36,12 +38,7 @@ const actionSchema = z.discriminatedUnion("action", [
   }),
   z.object({ action: z.literal("start") }),
   stopSessionInput,
-  z.object({
-    action: z.literal("note"),
-    title: z.string().trim().min(1).max(200),
-    body: z.string().trim().min(1).max(20000),
-    tags: z.string().max(500),
-  }),
+  noteInput,
   z.object({
     action: z.literal("settings"),
     weeklyHours: z.number().int().min(1).max(100),
@@ -158,13 +155,7 @@ export async function POST(request: Request) {
         await stopSession(input);
         break;
       case "note":
-        await db.insert(notes).values({
-          id: crypto.randomUUID(),
-          title: input.title,
-          body: input.body,
-          tags: input.tags,
-          createdAt: new Date().toISOString(),
-        });
+        await saveNote(input);
         break;
       case "settings":
         await db
@@ -178,6 +169,8 @@ export async function POST(request: Request) {
     }
     return NextResponse.json({ ok: true });
   } catch (error) {
+    if (error instanceof NotebookError)
+      return NextResponse.json({ error: error.message }, { status: 409 });
     if (error instanceof TrainingError)
       return NextResponse.json({ error: error.message }, { status: 400 });
     return NextResponse.json(

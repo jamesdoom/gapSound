@@ -2,6 +2,7 @@
 import { RetentionPanel } from "./retention-panel";
 import { WatchlistPanel } from "./watchlist-panel";
 import { ReviewPanel } from "./review-panel";
+import { NotebookPanel } from "./notebook-panel";
 import { BriefingPanel } from "./briefing-panel";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -49,14 +50,6 @@ function localDay(date = new Date()) {
 }
 function stamp(value: string | null) {
   return value ? new Date(value).toLocaleString() : "Not available";
-}
-function download(name: string, content: string, type: string) {
-  const url = URL.createObjectURL(new Blob([content], { type }));
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = name;
-  a.click();
-  URL.revokeObjectURL(url);
 }
 export function Dashboard() {
   const [page, setPage] = useState("Command Center");
@@ -220,17 +213,6 @@ export function Dashboard() {
     if (previousPage.current !== page) heading.current?.focus();
     previousPage.current = page;
   }, [page]);
-  function noteForm(form: HTMLFormElement) {
-    const values = new FormData(form);
-    void mutate({
-      action: "note",
-      title: values.get("title"),
-      body: values.get("body"),
-      tags: values.get("tags"),
-    }).then((ok) => {
-      if (ok) form.reset();
-    });
-  }
   const feedPanel = (
     <section className="panel feed-panel" aria-busy={loading}>
       <div className="panel-heading">
@@ -988,93 +970,7 @@ export function Dashboard() {
               </section>
             </div>
           )}
-          {page === "Research Notebook" && (
-            <div className="training-layout">
-              <section className="panel">
-                <h2>Capture an investigation</h2>
-                <p className="muted">
-                  Markdown is saved as text. Raw HTML is never rendered.
-                </p>
-                <form
-                  className="stack"
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    noteForm(e.currentTarget);
-                  }}
-                >
-                  <label>
-                    Title
-                    <input name="title" required maxLength={200} />
-                  </label>
-                  <label>
-                    Tags
-                    <input
-                      name="tags"
-                      maxLength={500}
-                      placeholder="authentication, incident-response"
-                    />
-                  </label>
-                  <label>
-                    Research note
-                    <textarea
-                      name="body"
-                      required
-                      maxLength={20000}
-                      rows={12}
-                      placeholder="Evidence, references, questions, and next steps…"
-                    />
-                  </label>
-                  <button className="primary" disabled={pending}>
-                    Save note
-                  </button>
-                </form>
-              </section>
-              <section className="panel">
-                <div className="panel-heading">
-                  <h2>Your research</h2>
-                  <button
-                    disabled={!data?.notes.length}
-                    onClick={() =>
-                      download(
-                        "gapsound-notes.json",
-                        JSON.stringify(data?.notes, null, 2),
-                        "application/json",
-                      )
-                    }
-                  >
-                    Export JSON
-                  </button>
-                </div>
-                <p className="muted">
-                  Searches title, content and tags. Up to 100 results per view.
-                </p>
-                {!data?.notes.length && (
-                  <p className="empty">No notes in this view.</p>
-                )}
-                {data?.notes.map((n) => (
-                  <article className="article" key={n.id}>
-                    <span className="tag">{n.tags || "Research"}</span>
-                    <h3>{n.title}</h3>
-                    <p className="note-body">{n.body}</p>
-                    <div className="article-footer">
-                      <span>{stamp(n.createdAt)}</span>
-                      <button
-                        onClick={() =>
-                          download(
-                            `${n.id}.md`,
-                            `# ${n.title}\n\nTags: ${n.tags}\n\n${n.body}`,
-                            "text/markdown",
-                          )
-                        }
-                      >
-                        Export Markdown
-                      </button>
-                    </div>
-                  </article>
-                ))}
-              </section>
-            </div>
-          )}
+          {page === "Research Notebook" && <NotebookPanel query={query} />}
           {page === "Settings" && (
             <section className="panel settings-panel">
               <h2>Workspace preferences</h2>

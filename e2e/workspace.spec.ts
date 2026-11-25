@@ -95,7 +95,10 @@ test("notes treat malicious markup as text and remain after reload", async ({
   const payload = '<img src=x onerror="window.__xss=true"> **Evidence**';
   await page.getByLabel("Research note", { exact: true }).fill(payload);
   await page.getByRole("button", { name: "Save note", exact: true }).click();
-  await expect(page.getByText(payload, { exact: true })).toBeVisible();
+  await expect(page.locator(".markdown-body strong")).toHaveText("Evidence");
+  await expect(page.locator("article .markdown-body")).toContainText(
+    '<img src=x onerror="window.__xss=true">',
+  );
   await expect(page.locator("main img")).toHaveCount(0);
   await page.reload();
   await page
@@ -619,4 +622,113 @@ test("local midnight refreshes objectives and review status without splitting an
   } finally {
     await context.close();
   }
+});
+
+test("notebook edits and tag filters persist, exports reach beyond 100 notes and stale drafts survive", async ({
+  page,
+}) => {
+  const origin = "http://127.0.0.1:3100";
+  for (let i = 0; i < 103; i++) {
+    const response = await page.request.post("/api/notebook", {
+      headers: { Origin: origin },
+      data: {
+        action: "note",
+        title: "Notebook paging " + String(i).padStart(3, "0"),
+        body: "**Evidence**\n\n- Check versions\n\n[Unsafe](javascript:alert%281%29)\n\n![tracking](https://tracker.example/pixel)",
+        tags: i % 2 ? "paging, odd" : "paging, even",
+      },
+    });
+    expect(response.ok()).toBe(true);
+  }
+  await page.goto("/");
+  await page
+    .getByRole("navigation")
+    .getByRole("button", { name: "Research Notebook" })
+    .click();
+  await page.getByLabel("Search workspace").fill("Notebook paging");
+  await expect(
+    page.getByText("Notes page 1 of 6 · 103 matching"),
+  ).toBeVisible();
+  const exported = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Export all matching JSON" }).click();
+  const download = await exported;
+  const { readFile } = await import("node:fs/promises");
+  const all = JSON.parse(await readFile((await download.path())!, "utf8"));
+  expect(all).toHaveLength(103);
+  expect(new Set(all.map((n: { id: string }) => n.id)).size).toBe(103);
+  for (let i = 0; i < 5; i++)
+    await page.getByRole("button", { name: "Next notes", exact: true }).click();
+  await expect(
+    page.getByText("Notes page 6 of 6 · 103 matching"),
+  ).toBeVisible();
+  expect(await page.locator("article.article").count()).toBe(3);
+  await page.getByLabel("Filter by tag").selectOption("odd");
+  await expect(page.getByText("Notes page 1 of 3 · 51 matching")).toBeVisible();
+  await page.getByLabel("Filter by tag").selectOption("");
+  await page.getByLabel("Search workspace").fill("Notebook paging 102");
+  await expect(page.locator("article.article")).toHaveCount(1);
+  await page.getByRole("button", { name: "Edit note", exact: true }).click();
+  await expect(page.getByLabel("Title", { exact: true })).toHaveValue(
+    "Notebook paging 102",
+  );
+  await page
+    .getByLabel("Tags", { exact: true })
+    .fill(" Final, FINAL, evidence ");
+  await page
+    .getByLabel("Research note", { exact: true })
+    .fill(
+      "# Findings\n\n**Reviewed**\n\n[Reference](https://www.cisa.gov/)\n\n<img src=x onerror=alert(1)>",
+    );
+  await page.getByRole("button", { name: "Save note changes" }).click();
+  await expect(page.getByText("Research note saved.")).toBeVisible();
+  await page.reload();
+  await page
+    .getByRole("navigation")
+    .getByRole("button", { name: "Research Notebook" })
+    .click();
+  await page.getByLabel("Search workspace").fill("Notebook paging 102");
+  await expect(
+    page.getByRole("button", { name: "Tag: final", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Findings", exact: true }),
+  ).toBeVisible();
+  expect(await page.locator("main img, main script").count()).toBe(0);
+  await page.getByRole("button", { name: "Edit note", exact: true }).click();
+  await page
+    .getByLabel("Research note", { exact: true })
+    .fill("Unsaved local draft");
+  const data = await (
+    await page.request.get("/api/notebook?q=Notebook%20paging%20102")
+  ).json();
+  const current = data.items[0];
+  const changed = await page.request.post("/api/notebook", {
+    headers: { Origin: origin },
+    data: { ...current, action: "note", body: "Saved in another tab" },
+  });
+  expect(changed.ok()).toBe(true);
+  await page.getByRole("button", { name: "Save note changes" }).click();
+  await expect(page.locator("main").getByRole("alert")).toContainText(
+    "changed in another view",
+  );
+  await expect(page.getByLabel("Research note", { exact: true })).toHaveValue(
+    "Unsaved local draft",
+  );
+  await page.getByRole("button", { name: "Cancel draft" }).click();
+  await page.getByRole("button", { name: "Edit note", exact: true }).click();
+  await expect(page.getByLabel("Research note", { exact: true })).toHaveValue(
+    "Saved in another tab",
+  );
+  await page.setViewportSize({ width: 320, height: 800 });
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  const denied = await page.request.post("/api/notebook", {
+    headers: { Origin: "https://hostile.example" },
+    data: { action: "note", title: "No", body: "No", tags: "" },
+  });
+  expect(denied.status()).toBe(403);
+  expect(
+    (
+      await page.request.get("/api/notebook?cursor=broken&export=true")
+    ).status(),
+  ).toBe(400);
 });
