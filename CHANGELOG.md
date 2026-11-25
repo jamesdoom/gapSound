@@ -1,5 +1,11 @@
 # Changelog
 
+## Configurable training objectives — 2026-11-25
+
+- Added ordered, editable reusable objective plans with revision checks and explicit once-per-day application.
+- Preserved existing daily records/completions and immutable briefing snapshots; aligned checklist/briefing ordering and bounded both daily addition paths.
+- Added reviewed migration 0009, service/component/browser coverage and restart/backup recovery checks.
+
 ## Release acceptance checks — 2026-11-25
 
 - Added consistent SQLite backup bundles and integrity/checksum-verified restore into new directories, with live WAL and production-server recovery regressions.

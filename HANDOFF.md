@@ -2,11 +2,29 @@
 
 ## Status
 
-Phase 1 remains in progress. Latest update: release backup/restore verification, redacted secret scanning, pinned dependencies and security/workflow review. Native manual signoff remains incomplete after a prior Computer Use safety block. Publisher policy review/source floors remain implemented. GS-006 vulnerability research remains implemented. Notebook editing/tags/export/Markdown (partial GS-007) remains implemented. Training session recovery and day rollover remain implemented. GS-004 intelligence discovery and GS-005 persistent deterministic briefings are complete. Scheduled due reviews are also implemented. Remaining work includes configurable objectives (GS-007), remaining publisher reuse/notice release gates (GS-003), native manual assistive/zoom/theme signoff (GS-002) and final release acceptance (GS-008), which remains gated by those dependencies. No Phase 2 work is authorized.
+Phase 1 remains in progress. Latest update: configurable ordered training objective plans, completing the remaining GS-007 workflow. GS-004 intelligence discovery, GS-005 persistent briefings, GS-006 vulnerability research and GS-007 training/notebook workflows are implemented. Remaining acceptance gates are publisher reuse/CVE notice packaging (GS-003), native screen-reader/zoom/contrast-theme signoff (GS-002), supported-tooling maintenance and final release reconciliation (GS-008). No Phase 2 work is authorized.
 
 The app remains local-first, single-user and bound to 127.0.0.1:3000. The existing protected Vercel deployment remains unsupported for application use until storage/access architecture is adapted. No hosting settings, paid services, AI providers or authentication changed. Git pushes may trigger the user's existing protected build integration.
 
-## Latest release acceptance update
+## Latest configurable objectives update
+
+Daily Training now contains a reusable objective plan with up to 20 distinct ordered titles. The user can add/edit/remove/reorder, save with revision checks, and explicitly apply the saved plan once per local day. Failed saves preserve the draft; Reload saved plan explicitly replaces it. Unsaved changes disable application. Initial loads are abortable and reads create no tasks. The editor uses stable entry keys, labeled controls and status/error announcements; React best-practices review was applied.
+
+Application verifies the current day against the supplied IANA zone and server clock, copies unchecked tasks after existing one-off objectives, and writes a unique daily application marker in the same transaction. Saving/reordering/clearing a plan changes future applications only. Already applied days cannot apply a revised plan again. Both one-off additions and plan application enforce a shared 100-objective daily limit. Legacy task IDs/titles/days/completions are preserved with position zero and deterministic ID ties; new tasks append. Workspace and briefing generation use position/ID ordering. Existing saved briefings remain unchanged.
+
+Migration 0009 adds task positions, the revisioned plan and daily application records. A verified pre-migration backup was created in the ignored data/backups/pre-objectives-0009 directory before npm run db:migrate applied 0009 to the local workspace. No personal records were deleted and no restore was performed. Other checkouts must run npm run db:migrate before restarting. No new dependency, external request, hosting change, paid service, authentication or Phase 2 feature was introduced. See docs/TRAINING.md.
+
+## Current verification actually executed
+
+- 160 unit/component tests across 27 files passed, including plan validation/order, stale saves, atomic rollback, daily limits, future-day history preservation, immutable briefing snapshots and editor loading/error/draft behavior.
+- Migration regression verifies an existing completed task retains title/day/completion and receives position zero; migration reruns apply nothing.
+- Typecheck, lint without warnings and final production build passed.
+- The corrected populated-plan browser scenario passed in isolation, including saved ordering, preserved daily completions, stale and oversized request rejection, no-Origin/cross-origin rejection, 320px reflow and axe. The final full Chrome suite passed all 49 tests, including production restart/restore, briefing creation/history, session recovery and local midnight.
+- The first concurrent build/test run timed out an existing 10-second child-process fixture; a complete rerun without the concurrent build passed. Initial lint also found an unescaped apostrophe, corrected before the passing lint/build.
+- The initial browser run found reorder buttons whose accessible names did not contain their visible wording; corrected to Move up/Move down followed by the objective number. The new checkbox assertion now waits for server-confirmed state. The accessibility failure interrupted session recovery and caused a later shared-fixture midnight test to fail; The next full run passed 48/49 tests but exposed a shared-fixture interaction: the new browser test had generated a briefing before the existing briefing creation scenario. Removed that unrelated browser setup; immutable briefing behavior remains verified in the isolated objective service test and the restart/restore scenario. The final 49-test full suite passed after this test isolation correction.
+- Gitleaks scanned all 20 available commits and current non-ignored workspace files with no findings. No new hosted CI result is claimed. Local backup and migration succeeded; 0009 is current.
+
+## Previous release acceptance update
 
 Added terminal-only npm run db:backup -- <new-bundle-directory> and npm run db:restore -- <bundle-directory> <new-data-directory>. Backups use SQLite VACUUM INTO for a consistent committed snapshot including WAL, followed by integrity/foreign-key/migration checks and a SHA-256 manifest. Restore copies into a new directory and verifies the copy; existing directories cannot be replaced. Parent directories may be created. Failed output is retained for diagnosis and must not be used. Commands do not copy a live database file alone, expose filesystem operations through HTTP or modify personal records. Only trusted bundles should be restored; hashes are not signatures. No encryption/off-device recovery is provided.
 
@@ -18,7 +36,7 @@ Pinned top-level packages to existing lockfile versions without upgrades. Fresh 
 
 Reviewed local Host/Origin/Fetch Metadata, input bounds, fixed/DNS-pinned transport, Markdown/safe links, CSP, migrations, mutation boundaries and SHA-pinned read-only CI. No public deployment, new web endpoint, paid service or Phase 2 work was added. Detailed evidence, limitations and recovery instructions are in docs/RELEASE_ACCEPTANCE.md. GS-008 remains in progress because configurable objectives, publisher reuse/CVE notice packaging and native accessibility acceptance remain open.
 
-## Current verification actually executed
+## Previous release-check verification
 
 - 154 Vitest tests across 25 files passed after final backup validation changes.
 - Typecheck, lint without warnings and production build passed after final code changes.
@@ -59,10 +77,10 @@ New version-2 briefings capture up to 100 unfinished due/overdue reviews plus th
 
 ## Remaining limitations and next actions
 
-- Complete configurable training objectives; the requested notebook workflows are implemented.
+- GS-007 configurable objective plans and notebook/training workflows are implemented; proceed with publisher notice packaging, native accessibility signoff and tooling maintenance before final release acceptance.
 - Resolve the specific publisher reuse/notice gates in docs/SOURCE_POLICIES.md before claiming GS-003 complete or distributing publisher data.
 - Complete native screen-reader speech, real browser zoom and Windows contrast-theme review using the isolated manual kit; Computer Use blocked the desktop attempt in this session.
-- Backup/restore, secret scanning and dependency/security review are implemented; retain their repeatable commands and resolve the remaining GS-002/003/007 gates before final release acceptance.
+- Backup/restore, secret scanning and dependency/security review are implemented; retain their repeatable commands and resolve the remaining GS-002/003 gates before final release acceptance.
 - Plan a compatible ESLint tooling upgrade; the current pinned version has no reported npm advisory but is unsupported.
 - Automated and visual-emulation checks do not certify WCAG conformance; native manual signoff remains separate.
 - CVE and notebook reads are paginated. Feed refresh lacks a cross-process lock/retry jitter; CVE lookups use persisted leases/cooldowns but no background queue.
@@ -74,7 +92,7 @@ Restart the dev server to load this update:
 
     npm run dev
 
-No new migration is needed (0008 remains current). Normal development remains http://127.0.0.1:3000. For a synthetic manual review workspace, run npm run test:a11y:manual after a production build and open http://127.0.0.1:3102; stop with Ctrl+C. General checks:
+Migration 0009 has been applied locally; other updated checkouts must run npm run db:migrate before restarting. Normal development remains http://127.0.0.1:3000. For a synthetic manual review workspace, run npm run test:a11y:manual after a production build and open http://127.0.0.1:3102; stop with Ctrl+C. General checks:
 
     npm test
     npm run typecheck
@@ -84,4 +102,4 @@ No new migration is needed (0008 remains current). Normal development remains ht
 
 Browser tests use new temporary databases on ports 3100/3101 and can run alongside the user's development server on 3000. Install Playwright Chromium or set PLAYWRIGHT_CHANNEL=chrome. Normal npm works in the user's VS Code terminal; only the restricted agent shell needs the bundled npm CLI fallback. No global configuration changes are required.
 
-Learning question: why can copying only a live SQLite database lose committed WAL records, and why does a checksum detect corruption without authenticating a backup?
+Learning question: why should a reusable plan be copied into each daily checklist instead of having historical checklists read the current plan directly?

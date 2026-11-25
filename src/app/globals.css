@@ -1200,3 +1200,16 @@ summary {
     color: ButtonText;
   }
 }
+
+.objective-plan-fields {
+  min-inline-size: 0;
+  display: grid;
+  gap: 16px;
+  border: 1px solid var(--border);
+  padding: 12px;
+}
+.objective-plan-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}

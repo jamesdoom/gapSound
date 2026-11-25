@@ -120,6 +120,23 @@ test("full Next.js restart preserves the complete personal workspace", async ({
       () => Intl.DateTimeFormat().resolvedOptions().timeZone,
     );
     await post({ action: "task", title: "Restart objective", day });
+    const objectivePlanResponse = await context.request.post(
+      "/api/objectives",
+      {
+        headers: { Origin: baseURL },
+        data: {
+          action: "save",
+          revision: 0,
+          titles: ["Persistent plan first", "Persistent plan second"],
+        },
+      },
+    );
+    expect(objectivePlanResponse.ok()).toBe(true);
+    const appliedPlan = await context.request.post("/api/objectives", {
+      headers: { Origin: baseURL },
+      data: { action: "apply", revision: 1, day, timeZone },
+    });
+    expect(appliedPlan.ok()).toBe(true);
     await post({ action: "start" });
     await post({ action: "settings", weeklyHours: 17, refreshMinutes: 120 });
     const noteResponse = await context.request.post("/api/notebook", {
@@ -206,6 +223,22 @@ test("full Next.js restart preserves the complete personal workspace", async ({
     expect(
       after.sessions.find((s: { endedAt: string | null }) => !s.endedAt).id,
     ).toBe(active.id);
+    expect(await (await context.request.get("/api/objectives")).json()).toEqual(
+      {
+        revision: 1,
+        titles: ["Persistent plan first", "Persistent plan second"],
+      },
+    );
+    const duplicatePlan = await context.request.post("/api/objectives", {
+      headers: { Origin: baseURL },
+      data: { action: "apply", revision: 1, day, timeZone },
+    });
+    expect(duplicatePlan.status()).toBe(409);
+    expect(
+      after.checklist
+        .filter((t: { title: string }) => t.title.startsWith("Persistent plan"))
+        .map((t: { title: string }) => t.title),
+    ).toEqual(["Persistent plan first", "Persistent plan second"]);
     expect(after.settings.weeklyHours).toBe(17);
     expect(after.settings.refreshMinutes).toBe(120);
     expect(
@@ -296,6 +329,17 @@ test("full Next.js restart preserves the complete personal workspace", async ({
     expect(
       final.sessions.find((s: { id: string }) => s.id === active.id).endedAt,
     ).not.toBeNull();
+    expect(await (await context.request.get("/api/objectives")).json()).toEqual(
+      {
+        revision: 1,
+        titles: ["Persistent plan first", "Persistent plan second"],
+      },
+    );
+    expect(
+      final.checklist.filter((t: { title: string }) =>
+        t.title.startsWith("Persistent plan"),
+      ),
+    ).toHaveLength(2);
     const archived = await (
       await context.request.get(
         "/api/briefings?day=" + day + "&id=" + briefing.id,

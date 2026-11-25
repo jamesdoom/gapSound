@@ -84,7 +84,7 @@ npm run test:e2e
 
 `GAPSOUND_DATA_DIR` can override the normal data directory. Browser tests always override it with a fresh temporary directory.
 
-Daily Training preserves unfinished sessions across restarts and midnight. Use **Recover a forgotten session** to record an actual local end time; daily objectives refresh at local midnight without deleting yesterday’s plan. See [training behavior](docs/TRAINING.md).
+Daily Training includes an editable, ordered reusable objective plan. Save it and apply it explicitly once per local day; existing checklists, completions and saved briefings are preserved. Migration 0009 is required for updated checkouts. Daily Training preserves unfinished sessions across restarts and midnight. Use **Recover a forgotten session** to record an actual local end time; daily objectives refresh at local midnight without deleting yesterday’s plan. See [training behavior](docs/TRAINING.md).
 
 Research Notebook supports revision-checked editing, normalized tag filters, safe Markdown/preview and paginated JSON/Markdown exports. See [notebook behavior and limits](docs/NOTEBOOK.md).
 

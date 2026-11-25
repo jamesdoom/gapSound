@@ -64,10 +64,21 @@ export const vulnerabilities = sqliteTable("vulnerabilities", {
   ingestedAt: text("ingested_at").notNull(),
 });
 export const tasks = sqliteTable("tasks", {
+  position: integer("position").notNull().default(0),
   id: text("id").primaryKey(),
   title: text("title").notNull(),
   done: integer("done", { mode: "boolean" }).notNull().default(false),
   day: text("day").notNull(),
+});
+export const objectivePlan = sqliteTable("objective_plan", {
+  id: text("id").primaryKey(),
+  revision: integer("revision").notNull().default(0),
+  titles: text("titles").notNull().default("[]"),
+});
+export const objectivePlanDays = sqliteTable("objective_plan_days", {
+  day: text("day").primaryKey(),
+  revision: integer("revision").notNull(),
+  appliedAt: text("applied_at").notNull(),
 });
 export const sessions = sqliteTable("sessions", {
   id: text("id").primaryKey(),

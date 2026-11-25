@@ -1,6 +1,6 @@
 # Phase 1 release acceptance — November 25, 2026
 
-This is a local development acceptance record, not approval for public deployment or redistribution. Phase 1 remains incomplete: configurable objectives, publisher reuse/CVE notice packaging and native screen-reader/zoom/contrast-theme signoff remain open. See TASKS.md and docs/SOURCE_POLICIES.md.
+This is a local development acceptance record, not approval for public deployment or redistribution. Phase 1 remains incomplete: publisher reuse/CVE notice packaging and native screen-reader/zoom/contrast-theme signoff remain open. Configurable objective plans were completed in the subsequent migration-0009 update; see HANDOFF.md for current checks. See TASKS.md and docs/SOURCE_POLICIES.md.
 
 ## Backup and recovery
 

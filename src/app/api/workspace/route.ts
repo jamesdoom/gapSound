@@ -16,6 +16,7 @@ import { workspace } from "@/services/workspace";
 import { refreshFeeds } from "@/services/feeds";
 import { intelligenceQuery } from "@/lib/intelligence-query";
 import { WatchlistError } from "@/services/watchlists";
+import { addDailyObjective, ObjectiveError } from "@/services/objectives";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 const actionSchema = z.discriminatedUnion("action", [
@@ -136,11 +137,7 @@ export async function POST(request: Request) {
           .where(eq(articles.id, input.id));
         break;
       case "task":
-        await db.insert(tasks).values({
-          id: crypto.randomUUID(),
-          title: input.title,
-          day: input.day,
-        });
+        await addDailyObjective(input.title, input.day);
         break;
       case "toggle-task":
         await db
@@ -169,6 +166,8 @@ export async function POST(request: Request) {
     }
     return NextResponse.json({ ok: true });
   } catch (error) {
+    if (error instanceof ObjectiveError)
+      return NextResponse.json({ error: error.message }, { status: 409 });
     if (error instanceof NotebookError)
       return NextResponse.json({ error: error.message }, { status: 409 });
     if (error instanceof TrainingError)

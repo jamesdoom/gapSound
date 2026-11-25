@@ -131,7 +131,7 @@ export async function generateBriefing(
       .select({ title: tasks.title, done: tasks.done })
       .from(tasks)
       .where(eq(tasks.day, options.day))
-      .orderBy(tasks.id)
+      .orderBy(tasks.position, tasks.id)
       .limit(100);
     const reviewPrompts = await tx
       .select({ title: tasks.title, day: tasks.day })

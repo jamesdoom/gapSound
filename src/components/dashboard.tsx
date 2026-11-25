@@ -2,6 +2,7 @@
 import { RetentionPanel } from "./retention-panel";
 import { WatchlistPanel } from "./watchlist-panel";
 import { ReviewPanel } from "./review-panel";
+import { ObjectivePanel } from "./objective-panel";
 import { CvePanel } from "./cve-panel";
 import { NotebookPanel } from "./notebook-panel";
 import { BriefingPanel } from "./briefing-panel";
@@ -893,6 +894,7 @@ export function Dashboard() {
           )}
           {page === "Daily Training" && (
             <div className="training-layout">
+              <ObjectivePanel day={trainingDay} onApplied={load} />
               <ReviewPanel day={trainingDay} />
               {trainingPanel}
               <section className="panel">

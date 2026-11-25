@@ -20,6 +20,9 @@ it("upgrades an existing database without losing user records and only applies o
     );
     await client.execute("INSERT INTO migrations VALUES ('0001','previous')");
     await client.execute(
+      "INSERT INTO tasks (id,title,done,day) VALUES ('existing-task','Keep historical completion',1,'2026-11-24')",
+    );
+    await client.execute(
       "INSERT INTO sources(id,name,url) VALUES ('source','Original','https://example.com')",
     );
     expect(await migrateDatabase(client)).toEqual([
@@ -30,8 +33,21 @@ it("upgrades an existing database without losing user records and only applies o
       "0006",
       "0007",
       "0008",
+      "0009",
     ]);
     expect(await migrateDatabase(client)).toEqual([]);
+    expect(
+      (
+        await client.execute(
+          "SELECT title,done,day,position FROM tasks WHERE id='existing-task'",
+        )
+      ).rows[0],
+    ).toMatchObject({
+      title: "Keep historical completion",
+      done: 1,
+      day: "2026-11-24",
+      position: 0,
+    });
     const [row] = (await client.execute("SELECT * FROM sources")).rows;
     expect(row.name).toBe("Original");
     expect(row.consecutive_failures).toBe(0);

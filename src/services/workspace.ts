@@ -41,7 +41,12 @@ export async function workspace(
         )
         .orderBy(desc(vulnerabilities.addedAt))
         .limit(100),
-      db.select().from(tasks).where(eq(tasks.day, day)).limit(100),
+      db
+        .select()
+        .from(tasks)
+        .where(eq(tasks.day, day))
+        .orderBy(tasks.position, tasks.id)
+        .limit(100),
       readTraining(),
       db.select().from(settings).where(eq(settings.id, "local")),
       db
