@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.2 — 2026-11-25
+
+- Hardened feed transport with public-address validation for IPv4/IPv6 and DNS pinning at socket connection time. Retained TLS hostname verification, fixed URL allowlisting, no redirects, total request deadline and response bounds.
+- Made per-source content upserts and successful-refresh timestamps transactional, preserving the previous catalog on write failure.
+- Added destination, transport, DNS callback and database rollback regression tests.
+- Verified Vercel Authentication covers all deployments and production redirects unauthenticated visitors to sign-in. Hosted storage support remains pending.
+
 ## 0.1.1 — 2026-11-25
 
 - Added isolated Playwright coverage for article workflows, CVE research, training, notes, mobile preferences and local API security.

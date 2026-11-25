@@ -1,5 +1,19 @@
 # Security learning notes
 
+## Closing the DNS validation gap
+
+`src/lib/feed-network.ts` validates all DNS answers and supplies a validated address directly to the HTTPS socket lookup callback. Checking a hostname before calling ordinary fetch would leave a second lookup vulnerable to DNS rebinding. The native HTTPS request retains the source hostname for TLS certificate verification, disables socket reuse, rejects redirects and bounds the entire request. `tests/feed-network.test.ts` covers private/special IPv4/IPv6 destinations, mixed DNS answers, both lookup callback shapes, HTTP errors, oversized bodies and unsupported compression. This is defense in depth, not permission to fetch arbitrary URLs: fixed source allowlisting remains mandatory. Trusted source compromise, workstation compromise and network policy outside the application remain risks.
+
+**Question:** Why must the address validated by the application be the same address used by the socket?
+
+**Independent exercise:** Add deterministic tests for DNS timeouts and responses that stop halfway through a document.
+
+## Atomic intelligence imports
+
+`persistSource` in `src/services/feeds.ts` commits records and the source success timestamp together. A failure rolls back the whole source import; other sources still refresh independently. `tests/ingestion.test.ts` injects a database trigger failure on the second record and proves the first record and new freshness timestamp are rolled back. Existing bookmarks remain preserved by the upsert. Retention and authoritative deletion handling remain future work.
+
+**Question:** What misleading state could appear if the success timestamp committed before all catalog records?
+
 ## Protecting localhost APIs
 
 Implemented in `src/lib/security.ts` and `src/app/api/workspace/route.ts`. A malicious website may try to make your browser send requests to a local application, even when the server binds only to loopback. Exact Host validation rejects attacker-controlled DNS names pointing to localhost; Origin and Fetch Metadata validation reject cross-origin requests. Mutation bodies must be JSON and are streamed with a 32KiB cap. Tests in `tests/security.test.ts` exercise trusted origin, cross-origin, originless writes, rebinding hosts and size limits. Local malware or a compromised same-origin script remains outside this defense.

@@ -18,6 +18,7 @@
     "@libsql/client": "latest",
     "drizzle-orm": "latest",
     "fast-xml-parser": "latest",
+    "ipaddr.js": "^2.5.0",
     "lucide-react": "latest",
     "next": "latest",
     "react": "latest",

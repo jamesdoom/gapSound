@@ -5,6 +5,7 @@ import { db } from "../db";
 import { articles, sources, vulnerabilities } from "../db/schema";
 import { eq } from "drizzle-orm";
 import { plainText, safeUrl } from "../lib/security";
+import { fetchPublicFeed } from "../lib/feed-network";
 
 export const feedSources = [
   {
@@ -89,37 +90,11 @@ const kevSchema = z.object({
     .max(20000),
 });
 
-// Only fixed allowlisted URLs are fetched. Redirects are rejected, never followed.
 async function fetchSource(url: string) {
-  if (!feedSources.some((source) => source.url === url))
-    throw new Error("Source not approved");
-  const response = await fetch(url, {
-    signal: AbortSignal.timeout(15000),
-    redirect: "error",
-    cache: "no-store",
-    headers: {
-      "User-Agent": "GapSound/0.1 personal educational feed reader",
-      Accept: "application/json, application/rss+xml, text/xml",
-    },
-  });
-  if (!response.ok) throw new Error(`Source returned HTTP ${response.status}`);
-  const reader = response.body?.getReader();
-  if (!reader) throw new Error("Empty response");
-  const chunks: Uint8Array[] = [];
-  let size = 0;
-  try {
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      size += value.length;
-      if (size > 10 * 1024 * 1024)
-        throw new Error("Source exceeded size limit");
-      chunks.push(value);
-    }
-  } finally {
-    await reader.cancel();
-  }
-  return Buffer.concat(chunks).toString("utf8");
+  return fetchPublicFeed(
+    url,
+    feedSources.map((source) => source.url),
+  );
 }
 let refreshing: Promise<void> | undefined;
 async function ingest() {
@@ -142,44 +117,7 @@ async function ingest() {
       .where(eq(sources.id, source.id));
     try {
       const text = await fetchSource(source.url);
-      if (source.id === "cisa") {
-        const catalog = kevSchema.parse(JSON.parse(text));
-        for (const entry of catalog.vulnerabilities) {
-          const value = {
-            id: entry.cveID,
-            vendor: entry.vendorProject,
-            product: entry.product,
-            name: entry.vulnerabilityName,
-            description: entry.shortDescription,
-            action: entry.requiredAction,
-            addedAt: entry.dateAdded,
-            dueDate: entry.dueDate,
-            ingestedAt: now,
-          };
-          await db
-            .insert(vulnerabilities)
-            .values(value)
-            .onConflictDoUpdate({ target: vulnerabilities.id, set: value });
-        }
-      } else {
-        for (const article of normalizeFeed(text))
-          await db
-            .insert(articles)
-            .values({ ...article, sourceId: source.id, ingestedAt: now })
-            .onConflictDoUpdate({
-              target: articles.url,
-              set: {
-                title: article.title,
-                summary: article.summary,
-                category: article.category,
-                publishedAt: article.publishedAt,
-              },
-            });
-      }
-      await db
-        .update(sources)
-        .set({ lastSuccess: now, error: null })
-        .where(eq(sources.id, source.id));
+      await persistSource(source.id, text, now);
     } catch (error) {
       const message =
         error instanceof Error &&
@@ -197,4 +135,52 @@ export function refreshFeeds() {
   return (refreshing ??= ingest().finally(() => {
     refreshing = undefined;
   }));
+}
+
+export async function persistSource(
+  sourceId: string,
+  text: string,
+  now: string,
+  database: typeof db = db,
+) {
+  await database.transaction(async (tx) => {
+    if (sourceId === "cisa") {
+      const catalog = kevSchema.parse(JSON.parse(text));
+      for (const entry of catalog.vulnerabilities) {
+        const value = {
+          id: entry.cveID,
+          vendor: entry.vendorProject,
+          product: entry.product,
+          name: entry.vulnerabilityName,
+          description: entry.shortDescription,
+          action: entry.requiredAction,
+          addedAt: entry.dateAdded,
+          dueDate: entry.dueDate,
+          ingestedAt: now,
+        };
+        await tx
+          .insert(vulnerabilities)
+          .values(value)
+          .onConflictDoUpdate({ target: vulnerabilities.id, set: value });
+      }
+    } else {
+      for (const article of normalizeFeed(text))
+        await tx
+          .insert(articles)
+          .values({ ...article, sourceId: sourceId, ingestedAt: now })
+          .onConflictDoUpdate({
+            target: articles.url,
+            set: {
+              title: article.title,
+              summary: article.summary,
+              category: article.category,
+              publishedAt: article.publishedAt,
+            },
+          });
+    }
+    await tx
+      .update(sources)
+      .set({ lastSuccess: now, error: null })
+      .where(eq(sources.id, sourceId));
+  });
 }

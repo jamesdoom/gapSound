@@ -28,4 +28,6 @@ Sources own articles by foreign key; article URLs are unique and hashes stable. 
 
 ## Known tradeoffs
 
-The first workspace fetch returns several bounded datasets together. Separate routes and pagination should follow as usage grows. Current catalog import is per-record, not all-or-nothing. Refresh coordination is process-local; run one server. Data retention, full export and source policy checks need further work. No automatic source fetching happens during production builds.
+The first workspace fetch returns several bounded datasets together. Separate routes and pagination should follow as usage grows. Each source import now commits its content and successful-refresh timestamp in one transaction. Refresh coordination is process-local; run one server. Data retention, full export and source policy checks need further work. No automatic source fetching happens during production builds.
+
+Outbound feed requests use native HTTPS with a custom socket lookup. Every resolved address must be public; the socket receives a validated address without a second DNS lookup. New connections do not reuse pooled sockets. TLS verifies the configured hostname. No redirects or compressed responses are accepted; a total 15-second deadline covers DNS, TLS and response streaming. This transport intentionally does not use an outbound proxy or the framework fetch cache.

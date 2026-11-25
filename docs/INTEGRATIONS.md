@@ -14,3 +14,5 @@ No credentials are configured. Treat these as public metadata integration candid
 Framework references: https://nextjs.org/docs/app/getting-started/installation and https://orm.drizzle.team/docs/sqlite/get-started-sqlite. Exact installed versions are recorded in package-lock.json; review before upgrades.
 
 Direct Node HTTP verification during this session returned HTTP 200 for all four configured endpoints. CISA returned application/json and all three news sources returned XML/RSS. The application-level full live ingest and source terms review remain pending; endpoint availability alone does not establish permission for all usage.
+
+Hardened transport smoke test (November 25, 2026): all four configured sources ingested successfully into an isolated temporary database, producing 35 articles and 1,796 KEV entries. Public DNS address validation and socket pinning were enabled. This test does not replace source terms/policy review.

@@ -50,7 +50,7 @@ Stop GapSound before backup or restore. Copy the entire `data` directory to a pr
 - Search results cap at 100; pagination/date filters/watchlists and richer briefings are pending.
 - Notes currently display Markdown as safe plain text. Editing/deleting notes is pending.
 - Local workspace has no authentication, encryption at rest or public hosting support. Browser tabs may share the same database. Do not place sensitive incident data here.
-- Source allowlisting is not DNS pinning. See SECURITY.md for residual SSRF and local-process risks.
+- Source fetching validates and pins DNS answers to public addresses. See SECURITY.md for remaining platform and local-process risks.
 - Browser tests cover persisted workflows, malicious note content, mobile overflow and API security boundaries. Full accessibility review and process-restart persistence tests remain pending.
 
 See HANDOFF.md for current results and next work. No screenshots are included until browser review is completed.
