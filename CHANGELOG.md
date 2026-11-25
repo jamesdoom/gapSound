@@ -96,3 +96,10 @@
 - Added 20-note pagination, per-page JSON and cursor-based all-matching JSON exports beyond 100 notes.
 - Render CommonMark/preview with inert HTML, no images and validated HTTPS links only.
 - Migration 0007 preserves existing note content and indexes legacy tags.
+
+### Vulnerability research
+
+- Added authoritative single-CVE Program lookup with validated CNA/ADP metadata, provenance-labeled CVSS v3/v4, affected versions, CWE and safe references.
+- Added paginated combined CISA/CVE browsing, literal vendor/severity filters and persistent saved vulnerabilities.
+- Added explicit unknown/rejected/unavailable/freshness states and preserved last-good records on failures.
+- Migration 0008 stores lookup records, saved markers and persisted cooldown/provider state.

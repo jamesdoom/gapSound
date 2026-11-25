@@ -2,36 +2,36 @@
 
 ## Status
 
-Phase 1 remains in progress. Latest completed update: research notebook editing, tag organization, paginated exports and safe Markdown (partial GS-007). Training session recovery and day rollover remain implemented. GS-004 intelligence discovery and GS-005 persistent deterministic briefings are complete. Scheduled due reviews are also implemented. Remaining work includes configurable objectives (GS-007), richer vulnerability research (GS-006), source policy review (GS-003), broader full application restart/manual assistive coverage (GS-002) and release acceptance (GS-008). No Phase 2 work is authorized.
+Phase 1 remains in progress. Latest completed update: GS-006 vulnerability research (CVE Program lookup, filters, saves and explicit unknown states). Notebook editing/tags/export/Markdown (partial GS-007) remains implemented. Training session recovery and day rollover remain implemented. GS-004 intelligence discovery and GS-005 persistent deterministic briefings are complete. Scheduled due reviews are also implemented. Remaining work includes configurable objectives (GS-007), source policy review (GS-003), broader full application restart/manual assistive coverage (GS-002) and release acceptance (GS-008). No Phase 2 work is authorized.
 
 The app remains local-first, single-user and bound to 127.0.0.1:3000. The existing protected Vercel deployment remains unsupported for application use until storage/access architecture is adapted. No hosting settings, paid services, AI providers or authentication changed. Git pushes may trigger the user's existing protected build integration.
 
 ## Latest behavior
 
-Research Notebook now uses a dedicated bounded same-origin API. Lists/search use pages of 20 instead of silently capping at 100; literal searches cover title, body and tags. Existing workspace search controls this view. Note editing retains creation timestamps, records UTC edit time and compares revision numbers transactionally. Stale saves preserve the local draft and refresh the list, allowing cancel/reopen of the latest version.
+CVE Watchtower now combines stored CISA KEV and manually retrieved CVE Program records, deduplicates identifiers, and paginates all results in pages of 20. It supports literal vendor/severity filters, a saved-only view and local save/unsave without removing research data. Metadata includes state, description/language, source publication/modification dates, assigner, CNA affected products/version ranges, CWE identifiers and safe source references. These do not establish the user's exposure.
 
-Tags are normalized/deduplicated on save and indexed for exact filtering. Edit tags per note, select a filter or click a note tag. The menu shows the 100 most-used tags and notebook-wide counts. No global rename/delete is implemented. Limits: 20 tags of 40 characters, 500 total tag-field characters, title 200 and body 20,000. Markdown source whitespace is preserved; blank-only bodies are rejected.
+Manual identifier lookup constructs only https://cveawg.mitre.org/api/cve/{validated-ID}; URLs are not accepted. The existing public-DNS/address-pinned, TLS-verified no-redirect transport enforces 15 seconds and 2 MiB. Persisted per-ID cooldown is 15 minutes; normal lookups reuse successful snapshots for 24 hours unless explicitly refreshed. A persisted global pending lease and provider failure/Retry-After backoff limit requests, including across restarts. No background CVE polling, API key, paid service or AI call was added.
 
-Markdown/preview uses project-local react-markdown with an element allowlist, inert HTML, omitted images and validated absolute HTTPS links only. It makes no remote requests and executes no content. Headings fit the note/preview hierarchy. Raw source is preserved for exports. No HTML plugins, AI or executable features were added.
+CVSS v4.0/v3.1/v3.0 assessments retain CNA/ADP provenance. Selection prefers CNA, then newest supported version, then original source order. Displayed bands derive from reported numeric scores; vectors are not independently recomputed. Missing/unsupported scores are UNKNOWN, with actual zero retained as NONE. Other assessments remain visible. A high score does not prove exploitation; a missing KEV match leaves exploitation unknown. EPSS and NVD enrichment remain planned.
 
-Exports include individual Markdown, current-page JSON and all-matching JSON. All-matching export traverses batches of 20 by creation-time/ID cursor beyond the former 100-note cap. New records after the initial cutoff are excluded. Limits are 10,000 records and 10 MiB of final JSON; exceeding them shows an error without a partial download. Export follows captured search/tag filters and is a live multi-batch read, not a consistent database snapshot. Avoid concurrent edits when consistency matters. Drafts are not persisted across navigation/reload.
+Successful snapshots and saved markers survive lookup failure. Latest error, attempt/fetch/retry times and KEV catalog freshness are visible. A 404 means no public record returned, which may be unpublished/reserved/unknown; it is not labeled nonexistent. REJECTED records display an explicit warning/rejection reason without inherited severity/affected claims. Missing fields remain unknown. Partial projection limits are flagged with a full-source link; this validates a bounded projection rather than every constraint of the full upstream schema. See docs/CVE_RESEARCH.md.
 
-Migration 0007 adds revision/edit-time columns, history and tag indexes; legacy tags are backfilled without rewriting original note content or timestamps. It applied locally. Personal notes were not edited by tests; all verification fixtures are isolated. Notes no longer travel through the unrelated workspace endpoint, though its legacy note mutation delegates to the same validated service. Listing count/items/tag counts are separate reads to avoid unnecessary write-transaction contention; refresh reconciles concurrent writes. See docs/NOTEBOOK.md.
+Migration 0008 adds lookup records, saved markers, provider state and a severity index. It applied locally without rewriting CISA or personal records. User data was not populated by tests. Routine verification uses labeled synthetic fixtures/injected provider responses. The separately executed live smoke test made one bounded read-only request and did not write a user record.
 
-Training still preserves unfinished sessions across restarts/midnight, offers actual-end recovery and clips completed totals to the rolling 168-hour window. The previous backend-process restart test remains; whole Next.js restart coverage for every module is still pending. See docs/TRAINING.md.
+Notebook editing, normalized tags, safe Markdown and cursor-based exports remain implemented (migration 0007); see docs/NOTEBOOK.md. Training retains unfinished sessions across restart/midnight, actual-end recovery and rolling 168-hour completed totals; see docs/TRAINING.md. Configurable objectives remain pending.
 
 ## Verification actually executed
 
-- 139 automated tests across 22 Vitest files passed.
-- Type checking, lint without warnings and production build passed. Git whitespace checks passed.
-- All 27 Chrome browser tests passed on isolated loopback port 3100, including JSON export content/unique IDs for 103 matching notes, paging/tag filters, edit/reload persistence, stale draft preservation/reopening, populated mobile accessibility and hostile-origin/malformed-cursor rejection.
-- New tests cover migration preservation, significant Markdown whitespace, exact tags, literal wildcard characters, stable ordering/cursor traversal beyond 100 notes, stale edits, input bounds and rollback after injected tag-index failure.
-- Markdown tests verify structure and inert HTML, omitted images and unsafe/local URL rejection. A component test confirms oversized all-note exports fail without a partial download.
-- The final significant-whitespace validation adjustment passed the full automated suite, rebuilt production app, typecheck/lint and both targeted notebook browser workflows afterward.
-- Browser testing caught ambiguous test selectors matching the hidden preview/Next route announcer; scoped them to the intended content. Full suite passed after correction.
-- npm audit reported zero vulnerabilities after adding react-markdown and its locked dependencies. No live feeds, external note references or AI calls were used.
+- 148 automated tests across 24 Vitest files passed.
+- Type checking, lint without warnings and production build passed; Git whitespace checks passed.
+- All 28 Chrome browser tests passed against the final build on isolated loopback port 3100. The targeted Watchtower mobile/research checks also passed before the full run.
+- Service tests cover normalization/provenance, zero/unknown/rejected data, safe references/URL construction, cache/cooldown, 404/429/Retry-After, malformed/mismatched replacement preservation, pagination/filtering beyond 100 records, saved-state reconnect persistence, projection limits and transactional rollback on injected provider-state failure.
+- A component regression confirms that refreshing the currently searched CVE reloads its displayed record even when filters do not change.
+- Browser coverage includes combined paging/vendor/severity filters, saved reload/unsave, real cached API lookup (no live call), safe references, unknown/unavailable records, mobile accessibility and hostile-origin/invalid-ID rejection.
+- The official public endpoint/record format and FIRST severity scales were checked against primary documentation. A single read-only production-transport request for CVE-2021-44228 parsed successfully: PUBLISHED, attributed ADP assessment and bounded references/truncation. No database write occurred.
+- Browser checks caught a wrapping issue at 320px and an ambiguous severity-control label. Both were fixed and targeted checks passed. A new test helper also needed its Testing Library options corrected; production build/type checking passed afterward.
 
-Prior hosted CI repair was verified at https://github.com/jamesdoom/gapSound/actions/runs/45652241919 with no annotations. CI uses SHA-pinned Node 24 actions while application checks run on Node 22. Current update checks ran locally; no new hosted CI result is claimed.
+Prior hosted CI repair was verified at https://github.com/jamesdoom/gapSound/actions/runs/45652241919 with no annotations. CI uses SHA-pinned Node 24 actions while application checks run on Node 22. Current update checks ran locally; no new hosted CI result is claimed. Dependency versions were unchanged in this update; the previous notebook dependency audit reported zero vulnerabilities.
 
 ## Persistent briefing/review behavior
 
@@ -40,11 +40,10 @@ New version-2 briefings capture up to 100 unfinished due/overdue reviews plus th
 ## Remaining limitations and next actions
 
 - Complete configurable training objectives; the requested notebook workflows are implemented.
-- Expand authoritative CVE research, severity/vendor filtering and saved vulnerabilities.
 - Complete publisher terms/rate-policy review and full application restart coverage for the remaining critical workflows; the backend restart test above does not launch/restart the whole Next.js server.
 - Complete backup/restore verification, secret scanning and final dependency/security review.
 - Manual screen-reader, zoom and forced-colors checks remain; axe passing is not WCAG certification.
-- CVE results still cap at 100; notebook reads are paginated. Feed refresh lacks a cross-process lock/retry jitter.
+- CVE and notebook reads are paginated. Feed refresh lacks a cross-process lock/retry jitter; CVE lookups use persisted leases/cooldowns but no background queue.
 - Private study text may appear in retained briefing snapshots and backups. No encryption at rest, undo or secure erasure is provided. Recovery of already completed sessions is not supported.
 
 ## Run and verify
@@ -53,7 +52,7 @@ Restart the dev server to load this update:
 
     npm run dev
 
-Migration 0007 has applied locally. On another checkout, run npm ci and npm run db:migrate before restarting. Open http://127.0.0.1:3000 → Research Notebook to edit, filter and export notes. General checks:
+Migration 0008 has applied locally. On another checkout, run npm ci and npm run db:migrate before restarting. Open http://127.0.0.1:3000 → CVE Watchtower. Browse/save local records or manually look up an identifier; inspect timestamps and provider notices before interpreting data. General checks:
 
     npm test
     npm run typecheck
@@ -63,4 +62,4 @@ Migration 0007 has applied locally. On another checkout, run npm ci and npm run 
 
 Browser tests use a new temporary database on port 3100 and can run alongside the user's development server on 3000. Install Playwright Chromium or set PLAYWRIGHT_CHANNEL=chrome. Normal npm works in the user's VS Code terminal; only the restricted agent shell needs the bundled npm CLI fallback. No global configuration changes are required.
 
-Learning question: why does a multi-page export need stable cursor ordering, and why does that alone not make concurrent edits a consistent database snapshot?
+Learning question: why do an unavailable CVE record, a missing CVSS score and no match in a local KEV catalog each leave different facts unknown?

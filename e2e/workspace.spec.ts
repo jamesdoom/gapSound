@@ -732,3 +732,115 @@ test("notebook edits and tag filters persist, exports reach beyond 100 notes and
     ).status(),
   ).toBe(400);
 });
+
+test("CVE research filters, saves, cached lookup and unavailable states remain explicit", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page
+    .getByRole("navigation")
+    .getByRole("button", { name: "CVE Watchtower" })
+    .click();
+  await expect(
+    page.getByText("Vulnerability page 1 of 6 · 106 matching"),
+  ).toBeVisible();
+  for (let i = 0; i < 5; i++)
+    await page
+      .getByRole("button", { name: "Next vulnerabilities", exact: true })
+      .click();
+  await expect(
+    page.getByText("Vulnerability page 6 of 6 · 106 matching"),
+  ).toBeVisible();
+  await page
+    .getByLabel("Vendor contains", { exact: true })
+    .fill("Odd Demo Vendor");
+  await expect(
+    page.getByText("Vulnerability page 1 of 3 · 51 matching"),
+  ).toBeVisible();
+  await page.getByLabel("Vendor contains", { exact: true }).fill("");
+  await page
+    .getByLabel("CVE severity", { exact: true })
+    .selectOption("CRITICAL");
+  await expect(
+    page.getByRole("heading", {
+      name: "Demonstration vulnerability",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(page.locator("article.article")).toHaveCount(1);
+  await expect(page.locator("article.article")).toContainText("9.8");
+  await page
+    .getByRole("button", { name: "Save vulnerability", exact: true })
+    .click();
+  await expect(
+    page.getByText("Vulnerability saved.", { exact: true }),
+  ).toBeVisible();
+  await page.reload();
+  await page
+    .getByRole("navigation")
+    .getByRole("button", { name: "CVE Watchtower" })
+    .click();
+  await page.getByLabel("Saved vulnerabilities only").check();
+  await expect(page.locator("article.article")).toHaveCount(1);
+  await expect(
+    page.getByRole("button", { name: "Unsave vulnerability", exact: true }),
+  ).toBeVisible();
+  // Cache lookup goes through the real application API; the synthetic record was seeded within 24 hours.
+  await page
+    .getByLabel("CVE identifier", { exact: true })
+    .fill("cve-2099-99999");
+  await page.getByRole("button", { name: "Look up CVE", exact: true }).click();
+  await expect(
+    page.getByText(
+      "Using a stored CVE record fetched within the last 24 hours.",
+      { exact: true },
+    ),
+  ).toBeVisible();
+  await expect(page.locator("article.article")).toHaveCount(1);
+  await page.getByText("CVE details and references", { exact: true }).click();
+  await expect(
+    page.getByRole("link", {
+      name: "https://example.com/demonstration-extra",
+      exact: true,
+    }),
+  ).toBeVisible();
+  expect(await page.locator('a[href^="javascript:"]').count()).toBe(0);
+  await page.setViewportSize({ width: 320, height: 800 });
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  await page
+    .getByRole("button", { name: "Unsave vulnerability", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Save vulnerability", exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Clear CVE filters", exact: true })
+    .click();
+  await page
+    .getByLabel("CVE severity", { exact: true })
+    .selectOption("UNKNOWN");
+  await page.getByLabel("Search workspace").fill("CVE-2099-77777");
+  await expect(page.locator("article.article")).toContainText(
+    "UNKNOWN · No supported CVSS",
+  );
+  await expect(page.locator("article.article")).toContainText(
+    "exploitation status is unknown",
+  );
+  await page.getByLabel("Search workspace").fill("CVE-2099-66666");
+  await expect(page.locator("article.article")).toContainText(
+    "Demonstration provider unavailable",
+  );
+  await expect(
+    page.getByRole("button", { name: "Save vulnerability", exact: true }),
+  ).toBeDisabled();
+  const invalid = await page.request.post("/api/cves", {
+    headers: { Origin: "http://127.0.0.1:3100" },
+    data: { action: "lookup", id: "https://internal.local/" },
+  });
+  expect(invalid.status()).toBe(400);
+  const forbidden = await page.request.post("/api/cves", {
+    headers: { Origin: "https://hostile.example" },
+    data: { action: "lookup", id: "CVE-2099-99999" },
+  });
+  expect(forbidden.status()).toBe(403);
+});

@@ -2,6 +2,7 @@
 import { RetentionPanel } from "./retention-panel";
 import { WatchlistPanel } from "./watchlist-panel";
 import { ReviewPanel } from "./review-panel";
+import { CvePanel } from "./cve-panel";
 import { NotebookPanel } from "./notebook-panel";
 import { BriefingPanel } from "./briefing-panel";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -751,7 +752,7 @@ export function Dashboard() {
                   : page === "Threat Intelligence"
                     ? "Signals that matter. Context you can act on."
                     : page === "CVE Watchtower"
-                      ? "Known exploitation, with evidence from CISA."
+                      ? "Authoritative records, severity and exploitation evidence."
                       : page === "Daily Training"
                         ? "Small, deliberate steps. Stronger defenses."
                         : page === "Research Notebook"
@@ -887,62 +888,7 @@ export function Dashboard() {
             </div>
           )}
           {page === "CVE Watchtower" && (
-            <section className="panel">
-              <div className="panel-heading">
-                <h2>Known Exploited Vulnerabilities</h2>
-                <span className="tag">CISA KEV</span>
-              </div>
-              <p className="muted">
-                Search by CVE, vendor, or product above. Inclusion indicates
-                evidence of exploitation; your specific exposure is unknown.
-                CVSS and EPSS are not yet integrated.
-              </p>
-              {!data?.kevs.length && (
-                <div className="empty">
-                  <ShieldAlert />
-                  <h3>No matching vulnerabilities</h3>
-                  <p>
-                    Refresh sources to ingest the CISA catalog, or change your
-                    search.
-                  </p>
-                </div>
-              )}
-              {data?.kevs.map((v) => (
-                <article className="article" key={v.id}>
-                  <div className="article-top">
-                    <a
-                      className="accent mono"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      href={`https://www.cve.org/CVERecord?id=${v.id}`}
-                    >
-                      {v.id}
-                    </a>
-                    <span className="tag warning">Known exploited</span>
-                  </div>
-                  <h3>{v.name}</h3>
-                  <p>{v.description}</p>
-                  <p>
-                    <strong>Required action:</strong> {v.action}
-                  </p>
-                  <div className="small muted">
-                    {v.vendor} · {v.product} · Added {v.addedAt} · CISA due date{" "}
-                    {v.dueDate}
-                  </div>
-                  <p className="small muted">
-                    CISA due dates apply to covered US federal agencies.
-                    Ingested {stamp(v.ingestedAt)}.{" "}
-                    <a
-                      href="https://www.cisa.gov/known-exploited-vulnerabilities-catalog"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      Original catalog
-                    </a>
-                  </p>
-                </article>
-              ))}
-            </section>
+            <CvePanel query={query} onQueryChange={setQuery} />
           )}
           {page === "Daily Training" && (
             <div className="training-layout">

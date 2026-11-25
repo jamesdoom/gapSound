@@ -57,7 +57,7 @@ Stop GapSound before backup or restore. Copy the entire `data` directory to a pr
 - Source failures show a retry-eligible timestamp and failure count in Command Center. Manual refresh respects the same waiting period; do not bypass source access restrictions.
 - Feed availability and terms can change. See docs/INTEGRATIONS.md for verification status.
 - Article browsing uses 25-record pages with matching counts and inclusive UTC publication-date filters. Unknown publication dates are excluded when a date filter is active. Search/source/category/saved/date changes return to page one. Page requests are bounded at 10,000 (250,000 accessible matches); cursor pagination remains a future scalability improvement.
-- CVE results still cap at 100; notebook results are paginated. Daily Training supports manually scheduled due reviews, rescheduling and retained completion history. New briefings capture due reviews; adaptive spaced repetition remains planned.
+- CVE and notebook results are paginated. Daily Training supports manually scheduled due reviews, rescheduling and retained completion history. New briefings capture due reviews; adaptive spaced repetition remains planned.
 - Notes currently display Markdown as safe plain text. Editing/deleting notes is pending.
 - Local workspace has no authentication, encryption at rest or public hosting support. Browser tabs may share the same database. Do not place sensitive incident data here.
 - Source fetching validates and pins DNS answers to public addresses. See SECURITY.md for remaining platform and local-process risks.
@@ -87,3 +87,5 @@ npm run test:e2e
 Daily Training preserves unfinished sessions across restarts and midnight. Use **Recover a forgotten session** to record an actual local end time; daily objectives refresh at local midnight without deleting yesterday’s plan. See [training behavior](docs/TRAINING.md).
 
 Research Notebook supports revision-checked editing, normalized tag filters, safe Markdown/preview and paginated JSON/Markdown exports. See [notebook behavior and limits](docs/NOTEBOOK.md).
+
+CVE Watchtower supports manual authoritative CVE Program lookup, provenance-labeled CVSS v3/v4 assessments, vendor/severity filters, saved vulnerabilities and explicit unknown/unavailable states. See [CVE research behavior and limits](docs/CVE_RESEARCH.md). No API key is required.

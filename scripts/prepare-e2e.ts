@@ -46,6 +46,48 @@ for (let i = 0; i < 103; i++)
       new Date().toISOString(),
     ],
   });
+// Explicitly synthetic CVE fixtures; no provider calls are made by browser setup.
+const { normalizeCve } = await import("../src/services/cve-normalization");
+const { demonstrationCve } = await import("../tests/fixtures/cve-record");
+for (const id of ["CVE-2099-99999", "CVE-2099-77777"]) {
+  const source = demonstrationCve(id);
+  if (id.endsWith("77777")) {
+    source.containers.cna.metrics = [];
+    source.containers.adp = [];
+    source.containers.cna.affected = [];
+    source.containers.cna.title = "Demonstration unknown severity";
+  }
+  const snapshot = normalizeCve(source, id);
+  await db.execute({
+    sql: "INSERT INTO cve_records(id,snapshot,severity,vendor_text,last_success,last_attempt,outcome) VALUES (?,?,?,?,?,?,'ok')",
+    args: [
+      id,
+      JSON.stringify(snapshot),
+      snapshot.metrics[0]?.severity ?? "UNKNOWN",
+      snapshot.affected.map((a) => a.vendor ?? "").join("\n"),
+      new Date().toISOString(),
+      new Date().toISOString(),
+    ],
+  });
+}
+await db.execute(
+  "INSERT INTO cve_records(id,outcome,error) VALUES ('CVE-2099-66666','error','Demonstration provider unavailable; no source record is stored.')",
+);
+for (let i = 0; i < 103; i++)
+  await db.execute({
+    sql: "INSERT INTO vulnerabilities(id,vendor,product,name,description,action,added_at,due_date,ingested_at) VALUES (?,?,?,?,?,?,?,?,?)",
+    args: [
+      "CVE-2099-" + (20000 + i),
+      i % 2 ? "Odd Demo Vendor" : "Even Demo Vendor",
+      "Synthetic Product",
+      "Demonstration paging vulnerability " + i,
+      "Synthetic browser fixture; no live threat claim.",
+      "Demonstration action",
+      "2099-01-01",
+      "2099-01-02",
+      new Date().toISOString(),
+    ],
+  });
 db.close();
 const server = spawn(
   process.execPath,

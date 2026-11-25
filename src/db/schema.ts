@@ -107,3 +107,24 @@ export const noteTags = sqliteTable(
   },
   (t) => [primaryKey({ columns: [t.noteId, t.tag] })],
 );
+
+export const cveRecords = sqliteTable("cve_records", {
+  id: text("id").primaryKey(),
+  snapshot: text("snapshot"),
+  severity: text("severity").notNull().default("UNKNOWN"),
+  vendorText: text("vendor_text").notNull().default(""),
+  lastSuccess: text("last_success"),
+  lastAttempt: text("last_attempt"),
+  nextAttemptAt: text("next_attempt_at"),
+  outcome: text("outcome"),
+  error: text("error"),
+});
+export const vulnerabilitySaves = sqliteTable("vulnerability_saves", {
+  id: text("id").primaryKey(),
+  savedAt: text("saved_at").notNull(),
+});
+export const cveLookupState = sqliteTable("cve_lookup_state", {
+  id: text("id").primaryKey(),
+  nextAttemptAt: text("next_attempt_at"),
+  consecutiveFailures: integer("consecutive_failures").notNull().default(0),
+});

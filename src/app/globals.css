@@ -1087,3 +1087,35 @@ summary {
 .markdown-body a {
   text-decoration: underline;
 }
+
+.cve-panel {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.cve-panel .input-row {
+  flex-wrap: wrap;
+  align-items: center;
+}
+.cve-panel .filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: 16px;
+  margin: 24px 0;
+}
+.cve-panel .filter-grid label {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.cve-panel .filter-grid label:has(input[type="checkbox"]) {
+  display: flex;
+  align-items: center;
+}
+.cve-panel input:not([type="checkbox"]),
+.cve-panel select {
+  width: 100%;
+  min-width: 0;
+}
+.cve-panel li {
+  margin: 8px 0;
+}

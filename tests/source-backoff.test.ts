@@ -29,6 +29,7 @@ it("upgrades an existing database without losing user records and only applies o
       "0005",
       "0006",
       "0007",
+      "0008",
     ]);
     expect(await migrateDatabase(client)).toEqual([]);
     const [row] = (await client.execute("SELECT * FROM sources")).rows;
