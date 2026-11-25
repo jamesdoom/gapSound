@@ -1,5 +1,12 @@
 # Changelog
 
+## Release acceptance checks — 2026-11-25
+
+- Added consistent SQLite backup bundles and integrity/checksum-verified restore into new directories, with live WAL and production-server recovery regressions.
+- Added checksum-pinned Gitleaks history/workspace scanning locally and in CI, with fully redacted output and full CI history.
+- Pinned existing top-level dependency versions and recorded clean-install, advisory, license and security-boundary review evidence.
+- Kept final Phase 1 acceptance open for remaining publisher, native accessibility and configurable-objective work.
+
 ## 0.1.10 — 2026-11-25
 
 - Replaced the filter-dependent dashboard summary with persistent, versioned daily briefing snapshots.

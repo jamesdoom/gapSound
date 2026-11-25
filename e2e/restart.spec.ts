@@ -3,6 +3,7 @@ import { spawn, type ChildProcess } from "node:child_process";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { backupDatabase, restoreDatabase } from "../src/db/backup";
 import { once } from "node:events";
 test("full Next.js restart preserves the complete personal workspace", async ({
   browser,
@@ -283,6 +284,11 @@ test("full Next.js restart preserves the complete personal workspace", async ({
     });
     expect(archive.ok()).toBe(true);
     await stop();
+    const bundle = directory + "-backup";
+    const restored = directory + "-restored";
+    await backupDatabase(join(directory, "gapsound.db"), bundle);
+    await restoreDatabase(bundle, restored);
+    env.GAPSOUND_DATA_DIR = restored;
     await start();
     const final = await (
       await context.request.get("/api/workspace?day=" + day)

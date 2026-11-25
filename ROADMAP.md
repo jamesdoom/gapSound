@@ -9,3 +9,5 @@
 - Phase 6 — Hardening and portfolio: accessibility/security review, backup verification, performance and deployment readiness.
 
 Do not implement all future modules simultaneously or deploy publicly.
+
+Phase 1 release safeguards now include consistent backups, non-overwriting restore verification, redacted history/workspace secret scanning and dependency review. This does not close outstanding Phase 1 acceptance gates; see docs/RELEASE_ACCEPTANCE.md.
