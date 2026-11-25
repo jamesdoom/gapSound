@@ -78,3 +78,8 @@
 - Added article search/filter/bookmark/read workflows, KEV search, daily tasks, session tracking, research notes/exports and preferences.
 - Added local request security, bounded inputs/feeds, security headers and regression tests.
 - Added CI and project documentation. Phase 1 remains in progress.
+
+### Manually scheduled due reviews
+
+- Added persistent review topics and local due dates in Daily Training, rescheduling, completion history and pagination.
+- New version-2 daily briefings capture pending due/overdue reviews; older snapshots remain readable and immutable.

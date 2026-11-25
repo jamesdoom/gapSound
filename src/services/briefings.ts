@@ -1,6 +1,7 @@
 import { and, desc, eq, gte, isNull, lt, lte, sql } from "drizzle-orm";
 import { db } from "../db";
 import {
+  scheduledReviews,
   articles,
   dailyBriefings,
   settings,
@@ -143,8 +144,28 @@ export async function generateBriefing(
       )
       .orderBy(desc(tasks.day), desc(tasks.id))
       .limit(3);
+    const dueCondition = and(
+      isNull(scheduledReviews.completedAt),
+      lte(scheduledReviews.dueDay, options.day),
+    );
+    const dueReviews = await tx
+      .select({
+        id: scheduledReviews.id,
+        title: scheduledReviews.title,
+        dueDay: scheduledReviews.dueDay,
+      })
+      .from(scheduledReviews)
+      .where(dueCondition)
+      .orderBy(scheduledReviews.dueDay, scheduledReviews.id)
+      .limit(100);
+    const [dueCount] = await tx
+      .select({ total: sql<number>`count(*)` })
+      .from(scheduledReviews)
+      .where(dueCondition);
     const snapshot = briefingSnapshot.parse({
-      version: 1,
+      version: 2,
+      dueReviews,
+      dueReviewCount: dueCount.total,
       day: options.day,
       timeZone: options.timeZone,
       generatedAt: timestamp,

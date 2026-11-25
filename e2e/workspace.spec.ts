@@ -452,3 +452,45 @@ test("daily briefings persist across reload and filters, retain versions and arc
     ).status(),
   ).toBe(400);
 });
+
+test("scheduled reviews persist, reschedule and retain completion history", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page
+    .getByRole("navigation")
+    .getByRole("button", { name: "Daily Training" })
+    .click();
+  const panel = page.getByRole("region", { name: "Scheduled reviews" });
+  await panel
+    .getByLabel("Review topic", { exact: true })
+    .fill("Review phishing evidence");
+  await panel.getByLabel("Review due date", { exact: true }).fill("2026-01-01");
+  await panel
+    .getByRole("button", { name: "Schedule review", exact: true })
+    .click();
+  await expect(panel.getByText("Review saved.")).toBeVisible();
+  await page.reload();
+  await page
+    .getByRole("navigation")
+    .getByRole("button", { name: "Daily Training" })
+    .click();
+  await expect(
+    panel.getByText("Review phishing evidence", { exact: true }),
+  ).toBeVisible();
+  await panel
+    .getByRole("button", { name: "Reschedule review", exact: true })
+    .click();
+  await panel.getByLabel("Review due date", { exact: true }).fill("2099-01-01");
+  await panel.getByRole("button", { name: "Save review date" }).click();
+  await expect(panel.getByText(/Upcoming.*2099-01-01/)).toBeVisible();
+  await panel.getByRole("button", { name: "Mark reviewed" }).click();
+  await expect(panel.getByText(/Completed.*2099-01-01/)).toBeVisible();
+  await page.setViewportSize({ width: 320, height: 800 });
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  const rejected = await page.request.post("/api/reviews", {
+    headers: { Origin: "https://hostile.example" },
+    data: { action: "create", title: "bad", dueDay: "2026-11-25" },
+  });
+  expect(rejected.status()).toBe(403);
+});

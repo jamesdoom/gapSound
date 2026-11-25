@@ -1,6 +1,7 @@
 "use client";
 import { RetentionPanel } from "./retention-panel";
 import { WatchlistPanel } from "./watchlist-panel";
+import { ReviewPanel } from "./review-panel";
 import { BriefingPanel } from "./briefing-panel";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -900,6 +901,7 @@ export function Dashboard() {
           )}
           {page === "Daily Training" && (
             <div className="training-layout">
+              <ReviewPanel day={localDay()} />
               {trainingPanel}
               <section className="panel">
                 <h2>Session history</h2>

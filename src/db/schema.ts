@@ -86,3 +86,11 @@ export const settings = sqliteTable("settings", {
   weeklyHours: integer("weekly_hours").notNull().default(15),
   refreshMinutes: integer("refresh_minutes").notNull().default(60),
 });
+
+export const scheduledReviews = sqliteTable("scheduled_reviews", {
+  id: text("id").primaryKey(),
+  title: text("title").notNull(),
+  dueDay: text("due_day").notNull(),
+  createdAt: text("created_at").notNull(),
+  completedAt: text("completed_at"),
+});

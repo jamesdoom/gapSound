@@ -247,6 +247,24 @@ export function BriefingPanel({
             </p>
           )}
           <button onClick={onTraining}>Open daily training</button>
+          <h3>Scheduled reviews due at generation</h3>
+          {snapshot.version === 2 ? (
+            <>
+              <p>
+                {snapshot.dueReviewCount} due or overdue; showing up to 100.
+                Completion and rescheduling update the next generated briefing.
+              </p>
+              <ul>
+                {snapshot.dueReviews.map((item) => (
+                  <li key={item.id}>
+                    {item.dueDay} · {item.title}
+                  </li>
+                ))}
+              </ul>
+            </>
+          ) : (
+            <p>Scheduled reviews were not captured in this older snapshot.</p>
+          )}
           <h3>Review prompts</h3>
           <p className="small muted">
             Completed objectives from the previous seven days to revisit. These

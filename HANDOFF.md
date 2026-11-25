@@ -2,7 +2,7 @@
 
 ## Status
 
-Phase 1 remains in progress. Latest completed update: GS-005 persisted deterministic daily briefings. GS-004 intelligence discovery is also complete. GS-002 process-restart/manual assistive review, GS-003 source policy review, GS-006 vulnerability research, GS-007 learning/notebook completion and GS-008 release acceptance remain open. No Phase 2 implementation is authorized.
+Phase 1 remains in progress. Latest completed update: manually scheduled due reviews (partial GS-007) with version-2 briefing integration. GS-005 persisted deterministic daily briefings remains complete. GS-004 intelligence discovery is also complete. GS-002 process-restart/manual assistive review, GS-003 source policy review, GS-006 vulnerability research, remaining GS-007 learning/notebook completion and GS-008 release acceptance remain open. No Phase 2 implementation is authorized.
 
 The app remains local-first and single-user. The existing Vercel deployment is protected by Vercel Authentication for all deployments but remains unsupported for application use until storage/access architecture is adapted. No Vercel settings, paid services or AI providers changed this session. Git pushes may trigger the user's existing protected build integration.
 
@@ -10,17 +10,17 @@ The app remains local-first and single-user. The existing Vercel deployment is p
 
 Command Center now generates saved daily snapshots through a dedicated same-origin API. Snapshots include recent source-linked news, KEV additions, watchlist/bookmark relevance, source freshness, an investigation prompt, learning/assessment, daily objectives and recently completed objective review prompts. They do not depend on article search/filter/page state. There are no AI calls or external requests during generation.
 
-Regeneration archives the previous version and inserts its replacement in one transaction. One unarchived version is allowed per local calendar day. Archive preserves the entire snapshot. History is paginated and survives article refreshes/retention. Generation validates the current date in the supplied IANA time zone; timestamps are stored in UTC. Source status describes generation time, not a live incident assessment. Review prompts are suggestions, not scheduled due reviews. See docs/DAILY_BRIEFINGS.md for all selection rules and limits.
+Regeneration archives the previous version and inserts its replacement in one transaction. One unarchived version is allowed per local calendar day. Archive preserves the entire snapshot. History is paginated and survives article refreshes/retention. Generation validates the current date in the supplied IANA time zone; timestamps are stored in UTC. Source status describes generation time, not a live incident assessment. Recorded-objective prompts remain suggestions. Separately, Daily Training now supports manually scheduled due reviews, rescheduling unfinished records and retained UTC completion history. Schedule a new record for another attempt. New briefing snapshots capture up to 100 pending due/overdue reviews and their total count; existing version-1 snapshots explicitly report that scheduled reviews were not captured. No automatic spaced repetition or notifications. See docs/DAILY_BRIEFINGS.md for all selection rules and limits.
 
-Migration 0005 added daily_briefings and its uniqueness/history indexes. It applied successfully locally; no user briefing was generated or personal records removed by tests. Browser and database tests use isolated fixtures.
+Migration 0006 added scheduled_reviews and its pending/due index; migration 0005 previously added daily_briefings. Both applied successfully locally; no user briefing was generated or personal records removed by tests. Browser and database tests use isolated fixtures.
 
 ## Verification actually executed
 
-- 126 automated tests across 17 Vitest files passed.
+- 129 automated tests across 18 Vitest files passed.
 - Type checking, lint (no warnings), and production build passed.
-- All 23 Chrome browser tests passed on isolated loopback port 3100, including generation/reload/filter independence, versioning/archive retrieval, assessment reveal, populated mobile accessibility, and existing workflows.
+- All 24 Chrome browser tests passed on isolated loopback port 3100, including generation/reload/filter independence, versioning/archive retrieval, assessment reveal, populated mobile accessibility, and existing workflows.
 - Database tests verified snapshot immutability, empty data, relevance/freshness, local date validation, archive/history paging, close/reopen persistence, unsafe reference validation and full rollback after an injected regeneration failure.
-- Browser testing caught an accessible-name mismatch in history buttons; fixed and all scans passed afterward.
+- Review tests cover due/upcoming/completed selection, rescheduling, protected completion history, invalid dates/identifiers, pagination, database close/reopen persistence and immutable/version-1-compatible briefing snapshots. The final request-cancellation improvement passed a targeted Chrome workflow rerun; typecheck/lint/build also passed afterward.
 - No live feed calls were made in this update. Previous normalization verification accepted 35 entries from three approved RSS sources without database writes.
 
 Prior hosted CI repair was verified at https://github.com/jamesdoom/gapSound/actions/runs/45652241919 with no annotations. CI uses SHA-pinned Node 24 actions while application checks run on Node 22; manual workflow dispatch and seven-day failure diagnostics are available. Current update checks above were executed locally; no new hosted result is claimed.
@@ -42,7 +42,7 @@ Normal npm works in the user's VS Code terminal. Stop and restart an existing de
     npm run db:migrate
     npm run dev
 
-Open http://127.0.0.1:3000 and choose Generate today’s briefing in Command Center. Refresh sources separately before regeneration if needed. Verification:
+Open http://127.0.0.1:3000 and use Daily Training → Scheduled reviews. Choose Generate today’s briefing in Command Center to capture currently due reviews. Refresh sources separately before regeneration if needed. Verification:
 
     npm test
     npm run typecheck

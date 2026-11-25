@@ -4,7 +4,7 @@ const link = z
   .string()
   .max(4000)
   .refine((value) => safeUrl(value) !== null, "Unsafe reference URL");
-export const briefingSnapshot = z.object({
+const legacySnapshot = z.object({
   version: z.literal(1),
   day: z.iso.date(),
   timeZone: z.string().max(100),
@@ -55,6 +55,22 @@ export const briefingSnapshot = z.object({
     answer: z.string().max(2000),
   }),
 });
+export const briefingSnapshot = z.discriminatedUnion("version", [
+  legacySnapshot,
+  legacySnapshot.extend({
+    version: z.literal(2),
+    dueReviews: z
+      .array(
+        z.object({
+          id: z.uuid(),
+          title: z.string().max(200),
+          dueDay: z.iso.date(),
+        }),
+      )
+      .max(100),
+    dueReviewCount: z.number().int().nonnegative().max(10000),
+  }),
+]);
 export type BriefingSnapshot = z.infer<typeof briefingSnapshot>;
 export function calendarDay(now: Date, timeZone: string) {
   const parts = new Intl.DateTimeFormat("en-US", {

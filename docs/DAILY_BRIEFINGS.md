@@ -13,7 +13,7 @@ The Command Center's **Generate today’s briefing** action creates a versioned 
 
 ## Persistence and history
 
-Migration 0005 adds daily_briefings, a partial unique index allowing one unarchived version per calendar day, and a history index. Each record stores a validated version-1 snapshot, local day, IANA time zone, UTC creation time and optional UTC archive time. Generation validates that the supplied day is today's date in that time zone. Regeneration archives the previous active version and inserts the replacement in one transaction. Failure rolls back both operations. History includes all saved versions in pages of ten.
+Migration 0005 adds daily_briefings, a partial unique index allowing one unarchived version per calendar day, and a history index. Each record stores a validated snapshot (version 1 historically, version 2 for new generations), local day, IANA time zone, UTC creation time and optional UTC archive time. Generation validates that the supplied day is today's date in that time zone. Regeneration archives the previous active version and inserts the replacement in one transaction. Failure rolls back both operations. History includes all saved versions in pages of ten.
 
 Archived snapshots remain readable even if source metadata changes or old articles are cleaned up. Their source health and objectives describe generation time. They are not live views. Earlier days remain available in history; there is no automatic snapshot deletion. Snapshots may contain study objectives and source metadata, so keep database backups private. They are bounded to 200,000 stored characters; history page requests are capped at 10,000.
 
@@ -22,3 +22,9 @@ Archived snapshots remain readable even if source metadata changes or old articl
 Snapshot schemas validate references before storage and again when read. Rendering uses React text escaping; no raw HTML, arbitrary URL retrieval, code execution or model tools are added. The briefing API enforces the existing local Host/Origin and bounded JSON rules. A forged historical-day generation request is rejected rather than presented as an authentic past briefing.
 
 `tests/briefings.test.ts` covers relevance, date windows, source states, current-day validation, empty data, immutable content, regeneration, archive/history and database reopen persistence. Browser tests cover generation/reload, filter independence, regeneration/archive/viewing history, assessment reveal, narrow-screen accessibility and hostile-origin rejection. Manual assistive-technology checks and full application process-restart testing remain separate backlog work.
+
+## Manually scheduled reviews
+
+Daily Training → Scheduled reviews creates a topic with a local due date. Pending records can be rescheduled or marked reviewed. Completion uses a UTC timestamp and is retained; schedule a new record for the next attempt. There are no background notifications or adaptive scheduling. Lists use pages of 20 with a 10,000-record cap.
+
+Migration 0006 adds scheduled_reviews. New briefing snapshot version 2 captures up to 100 unfinished reviews due on or before the generation day, oldest due first, plus the total due count. Upcoming/completed reviews are excluded. Changes appear only after regeneration. Version 1 snapshots remain readable and explicitly state that scheduled reviews were not captured. Stored objective prompts remain separate suggestions.
