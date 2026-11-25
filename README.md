@@ -6,12 +6,14 @@ A local cybersecurity intelligence and training workspace. The name reflects def
 
 ## Available now
 
+- Command Center daily briefings are saved snapshots with generation, regeneration, archiving and history. They include source-linked news/KEV additions, source freshness, recorded objectives and rule-based learning/review prompts. Article filters do not change saved content. See [daily briefing behavior and limits](docs/DAILY_BRIEFINGS.md). No AI key is required.
+
 - Hardened RSS/Atom/RDF metadata normalization with source-shape fixtures, entity decoding, safe-link deduplication and explicit publication dates. Full article bodies are not copied. See [normalization contracts and limits](docs/FEED_NORMALIZATION.md).
 
 - Article CVE mentions link to the CVE Program. A mention is not proof of a valid record or exploitation; matches in the imported CISA KEV catalog are separately labeled. Only stored title/summary metadata is scanned, not full articles. No extra network lookup is performed.
 - Threat Intelligence watchlists persist up to 50 named lists, each with 1–10 terms (60 characters each). Matches use any literal term in title/summary; English case is ignored. Use the watchlist filter to see matching articles and matched terms. Lists can be edited or removed with confirmation; article data is preserved. There are no automatic alerts or notifications.
 
-- Dark responsive command center with actual persisted counts and a basic deterministic briefing.
+- Dark responsive command center with actual persisted counts and persisted rule-based daily briefings.
 - RSS metadata from SANS ISC, KrebsOnSecurity and BleepingComputer, plus CISA KEV catalog ingestion.
 - Article search, source/category filters, bookmarks, read state and source refresh health.
 - KEV search by CVE, vendor and product, with remediation and provenance. CVSS/EPSS are not yet integrated.
@@ -55,7 +57,7 @@ Stop GapSound before backup or restore. Copy the entire `data` directory to a pr
 - Source failures show a retry-eligible timestamp and failure count in Command Center. Manual refresh respects the same waiting period; do not bypass source access restrictions.
 - Feed availability and terms can change. See docs/INTEGRATIONS.md for verification status.
 - Article browsing uses 25-record pages with matching counts and inclusive UTC publication-date filters. Unknown publication dates are excluded when a date filter is active. Search/source/category/saved/date changes return to page one. Page requests are bounded at 10,000 (250,000 accessible matches); cursor pagination remains a future scalability improvement.
-- CVE and note results still cap at 100. Richer briefings remain pending.
+- CVE and note results still cap at 100. Scheduled spaced-repetition reviews are not implemented; briefing review prompts use recorded completed objectives.
 - Notes currently display Markdown as safe plain text. Editing/deleting notes is pending.
 - Local workspace has no authentication, encryption at rest or public hosting support. Browser tabs may share the same database. Do not place sensitive incident data here.
 - Source fetching validates and pins DNS answers to public addresses. See SECURITY.md for remaining platform and local-process risks.

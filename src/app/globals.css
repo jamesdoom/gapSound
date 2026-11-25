@@ -1023,3 +1023,40 @@ footer {
   padding: 9px 0;
   text-decoration: underline;
 }
+
+.saved-briefing {
+  margin-bottom: 24px;
+}
+.briefing-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.briefing-content {
+  margin-top: 20px;
+}
+.briefing-content h3 {
+  margin-top: 22px;
+}
+.briefing-content ul,
+.briefing-history ul {
+  padding-left: 20px;
+}
+.briefing-content li,
+.briefing-history li {
+  margin-top: 12px;
+  overflow-wrap: anywhere;
+}
+.briefing-content a {
+  color: var(--accent);
+  text-decoration: underline;
+}
+.briefing-history {
+  margin-top: 24px;
+}
+summary {
+  cursor: pointer;
+}
+.briefing-content p {
+  overflow-wrap: anywhere;
+}

@@ -1,9 +1,9 @@
 "use client";
 import { RetentionPanel } from "./retention-panel";
 import { WatchlistPanel } from "./watchlist-panel";
+import { BriefingPanel } from "./briefing-panel";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  BookOpen,
   Bookmark,
   Check,
   ChevronRight,
@@ -20,7 +20,6 @@ import {
   ShieldAlert,
   Square,
   Target,
-  Wifi,
   X,
 } from "lucide-react";
 import { brand } from "@/lib/brand";
@@ -189,13 +188,6 @@ export function Dashboard() {
     ) ?? 0) / 60000,
   );
   const goal = (data?.settings?.weeklyHours ?? 15) * 60;
-  const health =
-    data?.sources.filter(
-      (s) =>
-        s.lastSuccess &&
-        !s.error &&
-        (now?.getTime() ?? 0) - Date.parse(s.lastSuccess) < interval * 120000,
-    ).length ?? 0;
   const changePage = (title: string) => {
     setPage(title);
     setQuery("");
@@ -781,40 +773,15 @@ export function Dashboard() {
                   </small>
                 </div>
               </div>
-              <section className="briefing">
-                <div className="briefing-icon">
-                  <Shield size={26} />
-                </div>
-                <div>
-                  <span className="eyebrow">
-                    DAILY DEFENSIVE BRIEFING · RULE-BASED
-                  </span>
-                  <h2>
-                    {data?.counts.total
-                      ? "Your intelligence, in perspective."
-                      : "Build your picture of the threat landscape."}
-                  </h2>
-                  <p>
-                    {data?.counts.total
-                      ? `${data.counts.total} articles collected and ${data.counts.kev} known exploited vulnerabilities in your local catalog. ${data.items[0] ? `Investigate: ${data.items[0].title}` : "Use Threat Intelligence to explore collected sources."}`
-                      : "Refresh sources to build your first briefing from public intelligence. No fabricated telemetry, no assumed exposure."}
-                  </p>
-                  <p className="small">
-                    Learning focus: distinguish vulnerability severity from
-                    evidence of exploitation. Check your understanding: does a
-                    high CVSS score prove exploitation?
-                  </p>
-                  <div className="briefing-bottom">
-                    <span>
-                      <Wifi size={14} />
-                      {health} of 4 sources fresh · Coverage may be incomplete
-                    </span>
-                    <button onClick={() => changePage("Threat Intelligence")}>
-                      Explore intelligence <BookOpen size={15} />
-                    </button>
-                  </div>
-                </div>
-              </section>
+              <BriefingPanel
+                key={now ? now.toLocaleDateString() : "initial"}
+                day={
+                  now
+                    ? `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`
+                    : ""
+                }
+                onTraining={() => changePage("Daily Training")}
+              />
               <div className="content-grid">
                 <div>{feedPanel}</div>
                 <div className="right-column">

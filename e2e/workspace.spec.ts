@@ -355,3 +355,100 @@ test("CVE mentions distinguish local KEV evidence and watchlists persist through
   });
   expect(invalid.status()).toBe(400);
 });
+
+test("daily briefings persist across reload and filters, retain versions and archive history", async ({
+  page,
+  request,
+}) => {
+  await page.goto("/");
+  const panel = page.getByRole("region", { name: "Your saved daily briefing" });
+  await panel
+    .getByRole("button", { name: "Generate today’s briefing", exact: true })
+    .click();
+  await expect(
+    panel.getByText(
+      "Daily briefing saved. Previous versions are retained in history.",
+      { exact: true },
+    ),
+  ).toBeVisible();
+  const day = await page.evaluate(() => {
+    const d = new Date();
+    return (
+      d.getFullYear() +
+      "-" +
+      String(d.getMonth() + 1).padStart(2, "0") +
+      "-" +
+      String(d.getDate()).padStart(2, "0")
+    );
+  });
+  const first = await (await request.get("/api/briefings?day=" + day)).json();
+  expect(first.view.snapshot.news.length).toBeGreaterThan(0);
+  await page.reload();
+  await expect(
+    panel.getByRole("button", {
+      name: "Regenerate today’s briefing",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await page
+    .getByLabel("Search workspace", { exact: true })
+    .fill("not-present-in-the-feed");
+  await expect(
+    page.getByRole("heading", {
+      name: "No intelligence in this view yet",
+      exact: true,
+    }),
+  ).toBeVisible();
+  const unchanged = await (
+    await request.get("/api/briefings?day=" + day)
+  ).json();
+  expect(unchanged.view).toEqual(first.view);
+  await panel
+    .getByRole("button", { name: "Regenerate today’s briefing", exact: true })
+    .click();
+  await expect(
+    panel.getByText(
+      "Daily briefing saved. Previous versions are retained in history.",
+      { exact: true },
+    ),
+  ).toBeVisible();
+  const second = await (await request.get("/api/briefings?day=" + day)).json();
+  expect(second.currentId).not.toBe(first.currentId);
+  expect(second.pagination.total).toBe(2);
+  await panel
+    .getByRole("button", { name: "Archive briefing", exact: true })
+    .click();
+  await expect(
+    panel.getByText("Briefing archived. Its snapshot is retained in history.", {
+      exact: true,
+    }),
+  ).toBeVisible();
+  await panel.getByText("Briefing history", { exact: false }).click();
+  await panel.locator('[data-briefing-id="' + first.currentId + '"]').click();
+  await expect(panel.getByText(/Archived snapshot/)).toBeVisible();
+  await panel.getByText("Show assessment answer", { exact: true }).click();
+  await expect(panel.getByText(/No. Severity and evidence/)).toBeVisible();
+  await page.setViewportSize({ width: 320, height: 900 });
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBe(true);
+  expect(
+    (
+      await request.post("/api/briefings", {
+        headers: { origin: "https://attacker.example" },
+        data: { action: "generate", day, timeZone: "UTC" },
+      })
+    ).status(),
+  ).toBe(403);
+  expect(
+    (
+      await request.post("/api/briefings", {
+        headers: { origin: "http://127.0.0.1:3100" },
+        data: { action: "generate", day: "invalid", timeZone: "UTC" },
+      })
+    ).status(),
+  ).toBe(400);
+});

@@ -53,3 +53,7 @@ Migration 0004 adds watchlists and child terms with referential integrity and un
 ## Feed normalization boundary
 
 Pure normalization lives in src/services/feed-normalization.ts, separately from hardened network transport and transactional persistence. Known RSS/Atom/RDF roots and field contracts are validated before per-entry conversion; text/date/URL policies are explicit. Entities is a direct production dependency for bounded known-entity decoding, not custom XML entity execution. See docs/FEED_NORMALIZATION.md for formats, resource bounds, source fixtures and limitations.
+
+## Persistent daily briefings
+
+A dedicated local API generates or archives validated versioned snapshots, and GET only reads current/history records. Migration 0005 enforces one active snapshot per calendar day. Generation takes a bounded seven-day metadata view, applies explicit watchlist/bookmark relevance, captures source freshness and recorded learning objectives, archives the prior active version and inserts its replacement atomically. Snapshot references are copied rather than joined back to mutable articles, preserving history through refresh and retention. History is paginated. The browser component loads independently of workspace filters and rolls over with the local calendar day. See docs/DAILY_BRIEFINGS.md for selection rules and limitations.

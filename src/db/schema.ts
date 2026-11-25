@@ -4,6 +4,13 @@ import {
   sqliteTable,
   text,
 } from "drizzle-orm/sqlite-core";
+export const dailyBriefings = sqliteTable("daily_briefings", {
+  id: text("id").primaryKey(),
+  day: text("day").notNull(),
+  createdAt: text("created_at").notNull(),
+  archivedAt: text("archived_at"),
+  snapshot: text("snapshot").notNull(),
+});
 export const watchlists = sqliteTable("watchlists", {
   id: text("id").primaryKey(),
   name: text("name").notNull().unique(),

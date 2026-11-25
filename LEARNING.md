@@ -1,5 +1,13 @@
 # Security learning notes
 
+## Preserve the evidence behind a daily briefing
+
+`src/services/briefings.ts` saves a bounded snapshot instead of rebuilding a summary from whichever filtered articles happen to be visible. Each snapshot records its generation time, local day/time zone, references and source freshness. Regeneration archives the previous version and creates a replacement transactionally; a unique index prevents multiple active versions for one day. This preserves the evidence context for later review, even after article cleanup. It does not turn source claims into verified incident facts or establish user exposure.
+
+`src/lib/briefings.ts` validates stored content and safe references, while the API retains local-origin validation. Tests cover immutable snapshots, empty/missing intelligence, dates, relevance, archive/history and database close/reopen. Browser tests check that article filtering cannot silently rewrite a saved record. There is no automatic deletion or encryption at rest; objectives may be personal, so backups need the same care as the live database. Review prompts explicitly avoid inventing spaced-repetition due dates.
+
+**Question:** Why should source freshness be saved with a briefing instead of showing only the source's latest refresh time when an old briefing is opened?
+
 ## Normalize evidence without inventing facts
 
 `src/services/feed-normalization.ts` separates parsing from fetching and persistence. XML text conversion is disabled so numeric titles are not lost. Entity decoding makes metadata readable, while DTD rejection, disabled custom entity expansion, size/depth limits and React escaping maintain separate defenses. Hidden script/style content and full article bodies are not retained as summaries. Unknown or timezone-less dates stay unknown; Atom updated is modification evidence, not publication evidence.

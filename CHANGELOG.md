@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.10 — 2026-11-25
+
+- Replaced the filter-dependent dashboard summary with persistent, versioned daily briefing snapshots.
+- Added generation, atomic regeneration, archiving and paginated history without AI or external requests.
+- Captured source-backed recent news, KEV additions, freshness, watchlist/bookmark relevance, investigation/learning prompts and recorded study objectives.
+- Added migration 0005, structured snapshot validation and persistence/lifecycle regression tests.
+
 ## 0.1.9 — 2026-11-25
 
 - Added explicit RSS/Atom/RDF normalization, safe relative links, URL deduplication, entity decoding, numeric-text preservation and strict publication-date handling.

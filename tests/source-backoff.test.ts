@@ -22,7 +22,12 @@ it("upgrades an existing database without losing user records and only applies o
     await client.execute(
       "INSERT INTO sources(id,name,url) VALUES ('source','Original','https://example.com')",
     );
-    expect(await migrateDatabase(client)).toEqual(["0002", "0003", "0004"]);
+    expect(await migrateDatabase(client)).toEqual([
+      "0002",
+      "0003",
+      "0004",
+      "0005",
+    ]);
     expect(await migrateDatabase(client)).toEqual([]);
     const [row] = (await client.execute("SELECT * FROM sources")).rows;
     expect(row.name).toBe("Original");
