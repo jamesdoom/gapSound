@@ -2,16 +2,16 @@
 
 ## Status
 
-Phase 1 remains in progress. Latest update: article pagination and inclusive UTC publication-date filtering (GS-004, still in progress). GS-003 still needs source policy review. GS-002 now has automated accessibility and keyboard checks; real assistive-technology review and full application process-restart coverage remain.
+Phase 1 remains in progress. Latest update: source-attributed CVE mentions and persistent literal-term watchlists (GS-004, still in progress pending feed normalization). GS-003 still needs source policy review. GS-002 now has automated accessibility and keyboard checks; real assistive-technology review and full application process-restart coverage remain.
 
 Vercel Authentication was verified to protect all deployments in the previous update. Hosting remains unsupported for real application use until storage/auth architecture is adapted. No Vercel settings or paid services were changed this session. Git pushes may trigger the user's existing protected Vercel build integration.
 
 ## Current verification
 
-- 95 tests across 12 Vitest files passed, including migration upgrades, HTTP header parsing, source isolation, SQLite close/reopen persistence, successful recovery and exact loopback-port checks.
+- 104 tests across 15 Vitest files passed, including migration upgrades, HTTP header parsing, source isolation, SQLite close/reopen persistence, successful recovery and exact loopback-port checks.
 - TypeScript (including production build), lint and production build passed.
-- All 21 Chrome browser tests passed on isolated loopback port 3100: axe default-rule scans across six screens at 1280/320px, keyboard skip/search/collapsed navigation and focus, success announcements, and seven workflow tests including paging beyond 100 and date-filter resets. All views passed horizontal-overflow checks. Desktop/mobile screenshots were inspected. The user's server on port 3000 was left alone.
-- No migration was needed in this update. Migration 0003 (retention eligibility index) was applied in the previous update. Repeated application and upgrades from an existing schema are covered by tests.
+- All 22 Chrome browser tests passed on isolated loopback port 3100: axe default-rule scans across six screens at 1280/320px, keyboard skip/search/collapsed navigation and focus, success announcements, and eight workflow tests including CVE/KEV labeling, watchlist create/reload/edit/removal, and paging/date filters. All views passed horizontal-overflow checks. Desktop/mobile screenshots were inspected. The user's server on port 3000 was left alone.
+- Migration 0004 added watchlist and child-term tables without changing existing article or personal records. Repeated application and upgrades from an existing schema are covered by tests.
 - No live public feed calls were made in this update. The prior update verified 35 articles and 1,796 KEV records from four sources in an isolated database.
 
 ## Behavior and limitations
@@ -20,7 +20,7 @@ Failures delay the next eligible refresh by 15 minutes, 30 minutes, 1 hour and p
 
 Retention is manual: Settings previews unbookmarked metadata ingested more than 90 days ago, with up to 400 IDs and a 15-minute preview expiry. Deletion rechecks current bookmarks and age. Notes, study records, sources and KEV remain outside cleanup. No cleanup ran against user data; migration 0003 only added an index. There is no automatic deletion, undo or secure erasure. Source feeds may reintroduce removed records.
 
-Remaining Phase 1 work: provider-policy review; manual assistive-technology/zoom review and application restart tests; related CVEs/watchlists/feed normalization; full persisted daily briefings; richer CVE research; note editing and training improvements; secret scanning and backup/restore verification. Notes currently display Markdown as plain text. The app remains single-user/local-first.
+Remaining Phase 1 work: provider-policy review; manual assistive-technology/zoom review and application restart tests; feed normalization; full persisted daily briefings; richer CVE research; note editing and training improvements; secret scanning and backup/restore verification. Notes currently display Markdown as plain text. The app remains single-user/local-first.
 
 ## Run instructions
 
@@ -54,3 +54,13 @@ Hosted verification completed successfully: https://github.com/jamesdoom/gapSoun
 Article pages contain 25 records, show matching counts, and reset to page one when filters change. UTC publication ranges include both selected days and exclude unknown dates; ingestion dates remain distinct. Queries are validated/parameterized and page offsets bounded. A deterministic publication-date/ID sort and shared transaction keep counts and rows consistent in an unchanged dataset. CVE and note paging remain pending. No migration or user-data edits were needed, and no paid services or Vercel settings changed.
 
 Verification for article browsing: 95 tests across 12 Vitest files, 21 Chrome browser tests, explicit typecheck, lint and production build passed. No migration is required. The fixture database includes 103 additional synthetic paging records; no user records were modified.
+
+## CVE mentions and watchlists
+
+CVE mentions are extracted from stored titles/summaries, normalized/deduplicated, and linked to the CVE Program. They are explicitly unverified source mentions; matching entries in the imported local CISA KEV catalog have a separate evidence badge. No full-article scraping or new external lookup is performed. Page-level KEV checks are batched.
+
+Threat Intelligence provides a Manage watchlists link, creation/editing/confirmed removal, a watchlist filter and matched-term explanations. Lists match any literal term (ASCII case-insensitive) in title/summary and combine with existing filters. Bounds: 50 lists, 1–10 terms/list, 60 characters/term, 80-character names. No regex or notifications. Deleting a list preserves articles. SQLite referential integrity and transactional writes protect list/term consistency. Migration 0004 applied locally.
+
+A prefilled terms field now uses an explicit accessible label reference. Lint excludes generated browser/data directories, avoiding a traversal race when Playwright recreates its result directory. User records were not removed; tests use isolated databases.
+
+Final verification for CVE/watchlists: 104 tests across 15 Vitest files, all 22 Chrome browser tests, explicit typecheck, lint and production build passed. Migration 0004 applied. To try the features, restart the dev server and open Threat Intelligence → Manage watchlists.

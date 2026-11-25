@@ -43,3 +43,9 @@ Settings uses a dedicated same-origin POST endpoint for preview and confirmed cl
 ## Article browsing
 
 The workspace delegates article queries to src/services/intelligence.ts. A shared Zod query schema validates dates and page bounds; SQL remains parameterized. Matching counts and 25-row pages are read together in a transaction. Results use descending publication date and ID, with unknown dates last when unfiltered. Inclusive UTC bounds are applied to publication time only. Pages beyond the remaining result set clamp to its last page. Pagination affects article browsing only; CVE/notes retain their current 100-row bounds. Offset paging is capped at 10,000 pages; large datasets and concurrent ingestion would benefit from keyset pagination later.
+
+## CVE mentions and watchlists
+
+Article pages derive CVE mentions from bounded stored metadata; no full-content scrape or external lookup runs. Mentions are normalized/deduplicated and cross-checked against the local KEV table with one bounded query for the page. The UI labels source mentions and local KEV evidence separately. These derived references need no backfill or extra article table.
+
+Migration 0004 adds watchlists and child terms with referential integrity and uniqueness. Services save edits atomically and bound list/term counts. Watchlist queries add literal instr conditions to existing filters and pagination, and return matched terms for explanation. The matching rule is OR across terms, AND with other filters; SQLite case folding is ASCII. No regex engine, notifications or background task is created. Removing a list removes only its terms, not articles.

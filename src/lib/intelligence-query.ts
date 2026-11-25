@@ -6,6 +6,7 @@ export const intelligenceQuery = z
     source: z.string().max(100).default(""),
     category: z.string().max(100).default(""),
     saved: z.boolean().default(false),
+    watchlistId: z.uuid().optional(),
     page: z.coerce.number().int().min(1).max(10000).default(1),
     from: z.iso.date().optional(),
     to: z.iso.date().optional(),

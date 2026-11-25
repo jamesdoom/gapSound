@@ -1,5 +1,19 @@
 # Security learning notes
 
+## Separate identifier mentions from evidence
+
+`src/lib/cves.ts` recognizes bounded CVE syntax in stored titles/summaries, normalizes case and removes duplicates. It rejects malformed/embedded/overlong identifiers and caps output at 20 per article. It does not verify that a record exists. `src/services/intelligence.ts` checks page mentions against the local KEV table in one query; the UI separately labels that local evidence. Neither a source mention nor a keyword match proves the user's exposure. The local catalog can be stale; provenance/freshness still matters. References are built from validated identifier characters, not untrusted URLs.
+
+Tests in `tests/cves.test.ts` and `tests/watchlists.test.ts` cover identifier boundaries, output bounds and local KEV evidence. The official CVE schema allows a four-digit year and 4–19 sequence digits: https://github.com/CVEProject/cve-schema/blob/main/schema/CVE_Record_Format.json . No NVD lookup, AI inference or remote article fetch is added.
+
+## Literal watchlists and bounded persistence
+
+`src/services/watchlists.ts` validates names/terms, saves edits transactionally and limits each workspace to 50 lists with at most 10 terms each. Matching uses parameterized SQLite instr conditions, so %, underscores and regex syntax remain literal text. Watchlist removal requires confirmation and deletes only the list/terms. `src/app/api/watchlists/route.ts` preserves the local Host/Origin boundary and request-size limit. Existing articles are matched at query time, so new and edited lists work immediately without rebuilding an index.
+
+The SQLite case folding used for comparisons is ASCII; arbitrary-language case-insensitive matching remains a limitation. Substrings can overmatch, aliases can be missed, and only available metadata is searched. The browser suite checks creation/reload/edit/removal, explains matched terms and tests hostile-origin rejection. No notification or background monitoring daemon is introduced.
+
+**Question:** Why should a CVE mention and a local KEV catalog match be presented as different kinds of evidence?
+
 ## Bounded browsing with explicit date semantics
 
 `src/lib/intelligence-query.ts` validates publication dates, range order and page numbers before database work. `src/services/intelligence.ts` uses parameterized Drizzle conditions and a 25-record page size, with a maximum requested page of 10,000 to bound offsets. Count and page results share a read transaction. Sorting by publication timestamp then stable ID avoids duplicate/missing records across ties in an unchanged dataset. Concurrent refreshes can still move records between offset pages; cursor pagination is a future option.

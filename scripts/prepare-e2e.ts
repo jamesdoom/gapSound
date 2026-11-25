@@ -13,7 +13,7 @@ await db.execute({
   args: [new Date(Date.now() + 7200000).toISOString()],
 });
 await db.execute(
-  "INSERT INTO articles(id,source_id,title,url,summary,category,published_at,ingested_at) VALUES ('fixture-article','fixture','Demonstration: phishing investigation','https://example.com/demo','Synthetic metadata for automated browser testing.','Phishing','2026-11-25T12:00:00Z','2026-11-25T12:01:00Z')",
+  "INSERT INTO articles(id,source_id,title,url,summary,category,published_at,ingested_at) VALUES ('fixture-article','fixture','Demonstration: phishing investigation','https://example.com/demo','Synthetic metadata for automated browser testing: CVE-2099-99999 and CVE-2099-11111.','Phishing','2026-11-25T12:00:00Z','2026-11-25T12:01:00Z')",
 );
 await db.execute(
   "INSERT INTO vulnerabilities VALUES ('CVE-2099-99999','Fictional Vendor','Demonstration Product','Demonstration vulnerability','Synthetic test fixture, not a real CVE.','Apply fictional remediation.','2099-01-01','2099-02-01','2099-01-01T00:00:00Z')",

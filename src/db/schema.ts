@@ -1,4 +1,24 @@
-import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import {
+  integer,
+  primaryKey,
+  sqliteTable,
+  text,
+} from "drizzle-orm/sqlite-core";
+export const watchlists = sqliteTable("watchlists", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  createdAt: text("created_at").notNull(),
+});
+export const watchlistTerms = sqliteTable(
+  "watchlist_terms",
+  {
+    watchlistId: text("watchlist_id")
+      .notNull()
+      .references(() => watchlists.id, { onDelete: "cascade" }),
+    term: text("term").notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.watchlistId, table.term] })],
+);
 export const sources = sqliteTable("sources", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),

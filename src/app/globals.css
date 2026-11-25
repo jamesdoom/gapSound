@@ -968,3 +968,58 @@ footer {
   color: var(--muted);
   font-size: 0.875rem;
 }
+
+.intelligence-layout {
+  display: grid;
+  gap: 24px;
+}
+.watchlist-panel {
+  max-width: 100%;
+}
+.watchlist-panel form {
+  max-width: 640px;
+}
+.watchlist-list {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 16px;
+  margin-top: 24px;
+}
+.watchlist-list li {
+  border-top: 1px solid var(--border);
+  padding-top: 16px;
+  overflow-wrap: anywhere;
+}
+.watchlist-list .input-row {
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+.cve-mentions ul {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 8px;
+}
+.cve-mentions li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  max-width: 100%;
+}
+.cve-mentions a {
+  color: var(--accent);
+  text-decoration: underline;
+  overflow-wrap: anywhere;
+}
+
+.manage-watchlists {
+  color: var(--accent);
+  font-size: 0.875rem;
+  padding: 9px 0;
+  text-decoration: underline;
+}

@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import AxeBuilder from "@axe-core/playwright";
 test("intelligence search, filter, bookmarks and read state survive reload", async ({
   page,
 }) => {
@@ -259,4 +260,98 @@ test("article paging reaches records beyond 100 and date filters reset the page"
     "from=2026-11-26&to=2026-11-25",
   ])
     expect((await request.get("/api/workspace?" + query)).status()).toBe(400);
+});
+
+test("CVE mentions distinguish local KEV evidence and watchlists persist through edit and removal", async ({
+  page,
+  request,
+}) => {
+  await page.goto("/");
+  await page
+    .getByRole("navigation")
+    .getByRole("button", { name: "Threat Intelligence", exact: true })
+    .click();
+  const article = page
+    .locator("article")
+    .filter({ hasText: "Demonstration: phishing investigation" });
+  await expect(
+    article.getByRole("link", { name: "CVE-2099-99999", exact: true }),
+  ).toHaveAttribute("href", "https://www.cve.org/CVERecord?id=CVE-2099-99999");
+  await expect(
+    article.getByText("Listed in local CISA KEV", { exact: true }),
+  ).toHaveCount(1);
+  await expect(
+    article.getByRole("link", { name: "CVE-2099-11111", exact: true }),
+  ).toBeVisible();
+  await expect(
+    article.getByText(/record existence and article claims are not verified/),
+  ).toBeVisible();
+  await page.getByLabel("Watchlist name", { exact: true }).fill("Web stack");
+  await page
+    .getByLabel("Watchlist terms (one per line)", { exact: true })
+    .fill("phishing");
+  await page
+    .getByRole("button", { name: "Create watchlist", exact: true })
+    .click();
+  await expect(
+    page.getByText("Watchlist saved.", { exact: true }),
+  ).toBeVisible();
+  await page.reload();
+  await page
+    .getByRole("navigation")
+    .getByRole("button", { name: "Threat Intelligence", exact: true })
+    .click();
+  await page
+    .getByLabel("Filter watchlist", { exact: true })
+    .selectOption({ label: "Web stack" });
+  await expect(
+    page.getByText("Matched watchlist terms: phishing", { exact: true }),
+  ).toBeVisible();
+  await expect(page.getByText(/1–1 of 1 matching articles/)).toBeVisible();
+  await page
+    .getByRole("button", { name: "Edit watchlist Web stack", exact: true })
+    .click();
+  await page
+    .getByLabel("Watchlist terms (one per line)", { exact: true })
+    .fill("CVE-2099-11111");
+  await page
+    .getByRole("button", { name: "Save watchlist changes", exact: true })
+    .click();
+  await expect(
+    page.getByText("Matched watchlist terms: cve-2099-11111", { exact: true }),
+  ).toBeVisible();
+  await page.setViewportSize({ width: 320, height: 900 });
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBe(true);
+  await page
+    .getByRole("button", { name: "Remove watchlist Web stack", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Confirm removal", exact: true })
+    .click();
+  await expect(
+    page.getByText("Watchlist removed. Articles were preserved.", {
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    article.getByRole("link", {
+      name: "Demonstration: phishing investigation",
+      exact: true,
+    }),
+  ).toBeVisible();
+  const blocked = await request.post("/api/watchlists", {
+    headers: { origin: "https://attacker.example" },
+    data: { action: "save", name: "Blocked", terms: ["test"] },
+  });
+  expect(blocked.status()).toBe(403);
+  const invalid = await request.post("/api/watchlists", {
+    headers: { origin: "http://127.0.0.1:3100" },
+    data: { action: "save", name: "Invalid", terms: [] },
+  });
+  expect(invalid.status()).toBe(400);
 });

@@ -7,6 +7,7 @@ import { boundedJson, validateRequest } from "@/lib/security";
 import { workspace } from "@/services/workspace";
 import { refreshFeeds } from "@/services/feeds";
 import { intelligenceQuery } from "@/lib/intelligence-query";
+import { WatchlistError } from "@/services/watchlists";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 const actionSchema = z.discriminatedUnion("action", [
@@ -60,6 +61,7 @@ export async function GET(request: Request) {
     page: params.get("page") ?? 1,
     from: params.get("from") || undefined,
     to: params.get("to") || undefined,
+    watchlistId: params.get("watchlist") || undefined,
   });
   if (!browse.success)
     return NextResponse.json(
@@ -74,11 +76,18 @@ export async function GET(request: Request) {
         (params.get("category") ?? "").slice(0, 100),
         params.get("saved") === "true",
         day.success ? day.data : new Date().toISOString().slice(0, 10),
-        { page: browse.data.page, from: browse.data.from, to: browse.data.to },
+        {
+          page: browse.data.page,
+          from: browse.data.from,
+          to: browse.data.to,
+          watchlistId: browse.data.watchlistId,
+        },
       ),
       { headers: { "Cache-Control": "no-store" } },
     );
-  } catch {
+  } catch (error) {
+    if (error instanceof WatchlistError)
+      return NextResponse.json({ error: error.message }, { status: 404 });
     return NextResponse.json(
       {
         error:

@@ -1,5 +1,6 @@
 import { desc, eq, gte, like, or, sql } from "drizzle-orm";
 import { listArticles } from "./intelligence";
+import { listWatchlists } from "./watchlists";
 import { db } from "../db";
 import {
   articles,
@@ -16,7 +17,12 @@ export async function workspace(
   category: string,
   saved: boolean,
   day: string,
-  browsing: { page?: number; from?: string; to?: string } = {},
+  browsing: {
+    page?: number;
+    from?: string;
+    to?: string;
+    watchlistId?: string;
+  } = {},
 ) {
   const [
     articlePage,
@@ -84,6 +90,7 @@ export async function workspace(
   return {
     items: articlePage.items,
     pagination: articlePage.pagination,
+    watchlists: await listWatchlists(),
     sources: sourceList,
     kevs,
     checklist,

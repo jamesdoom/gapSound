@@ -1,5 +1,6 @@
 "use client";
 import { RetentionPanel } from "./retention-panel";
+import { WatchlistPanel } from "./watchlist-panel";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   BookOpen,
@@ -67,6 +68,7 @@ export function Dashboard() {
   const [source, setSource] = useState("");
   const [category, setCategory] = useState("");
   const [saved, setSaved] = useState(false);
+  const [watchlistId, setWatchlistId] = useState("");
   const [articlePage, setArticlePage] = useState(1);
   const [publishedFrom, setPublishedFrom] = useState("");
   const [publishedTo, setPublishedTo] = useState("");
@@ -87,6 +89,7 @@ export function Dashboard() {
         source,
         category,
         saved: String(saved),
+        watchlist: watchlistId,
         day: localDay(),
         page: String(articlePage),
         from: publishedFrom,
@@ -105,7 +108,16 @@ export function Dashboard() {
     } finally {
       if (version === loadVersion.current) setLoading(false);
     }
-  }, [query, source, category, saved, articlePage, publishedFrom, publishedTo]);
+  }, [
+    query,
+    source,
+    category,
+    saved,
+    articlePage,
+    publishedFrom,
+    publishedTo,
+    watchlistId,
+  ]);
   const mutate = useCallback(
     async (body: Record<string, unknown>) => {
       setPending(true);
@@ -190,6 +202,7 @@ export function Dashboard() {
     setSource("");
     setCategory("");
     setSaved(false);
+    setWatchlistId("");
     setArticlePage(1);
     setPublishedFrom("");
     setPublishedTo("");
@@ -272,6 +285,21 @@ export function Dashboard() {
         >
           <Bookmark size={15} /> Saved
         </button>
+        <select
+          aria-label="Filter watchlist"
+          value={watchlistId}
+          onChange={(event) => {
+            setWatchlistId(event.target.value);
+            setArticlePage(1);
+          }}
+        >
+          <option value="">All watchlists</option>
+          {data?.watchlists?.map((list) => (
+            <option key={list.id} value={list.id}>
+              {list.name}
+            </option>
+          ))}
+        </select>
         <label className="date-filter">
           Published from (UTC)
           <input
@@ -301,6 +329,7 @@ export function Dashboard() {
             !source &&
             !category &&
             !saved &&
+            !watchlistId &&
             !publishedFrom &&
             !publishedTo &&
             !query
@@ -309,6 +338,7 @@ export function Dashboard() {
             setSource("");
             setCategory("");
             setSaved(false);
+            setWatchlistId("");
             setPublishedFrom("");
             setPublishedTo("");
             setQuery("");
@@ -317,6 +347,11 @@ export function Dashboard() {
         >
           Clear filters
         </button>
+        {page === "Threat Intelligence" && (
+          <a className="manage-watchlists" href="#watchlists-title">
+            Manage watchlists
+          </a>
+        )}
       </div>
       {(publishedFrom || publishedTo) && (
         <p className="small muted">
@@ -360,6 +395,37 @@ export function Dashboard() {
               {item.summary.slice(0, 230)}
               {item.summary.length > 230 ? "…" : ""}
             </p>
+            {!!item.matchedTerms?.length && (
+              <p className="small">
+                Matched watchlist terms: {item.matchedTerms.join(" · ")}
+              </p>
+            )}
+            {!!item.cveMentions?.length && (
+              <div className="cve-mentions">
+                <p className="small muted">
+                  CVE mentions in source metadata; record existence and article
+                  claims are not verified.
+                </p>
+                <ul>
+                  {item.cveMentions.map((cve) => (
+                    <li key={cve.id}>
+                      <a
+                        href={`https://www.cve.org/CVERecord?id=${cve.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {cve.id}
+                      </a>
+                      {cve.inKev && (
+                        <span className="tag warning">
+                          Listed in local CISA KEV
+                        </span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
             <div className="article-footer">
               <span title={`Ingested: ${stamp(item.ingestedAt)}`}>
                 Published {stamp(item.publishedAt)}
@@ -791,7 +857,22 @@ export function Dashboard() {
               </div>
             </>
           )}
-          {page === "Threat Intelligence" && feedPanel}
+          {page === "Threat Intelligence" && (
+            <div className="intelligence-layout">
+              {feedPanel}
+              <WatchlistPanel
+                lists={data?.watchlists ?? []}
+                onChange={async (deletedId) => {
+                  if (deletedId && watchlistId === deletedId) {
+                    setWatchlistId("");
+                    setArticlePage(1);
+                  } else if (articlePage !== 1) {
+                    setArticlePage(1);
+                  } else await load();
+                }}
+              />
+            </div>
+          )}
           {page === "CVE Watchtower" && (
             <section className="panel">
               <div className="panel-heading">

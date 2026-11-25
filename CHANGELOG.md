@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.8 — 2026-11-25
+
+- Added CVE identifiers found in article titles/summaries, linked to CVE Program records and explicitly labeled as unverified source mentions.
+- Cross-referenced mentions against the local CISA KEV catalog in a single bounded query per page; local KEV evidence is labeled separately.
+- Added persistent watchlist creation/editing/confirmed removal, literal-term filtering, matched-term explanations and page resets.
+- Added migration 0004 and tests for extraction boundaries, deduplication, validation, literal matching, limits, persistence and source evidence labels.
+
 ## 0.1.7 — 2026-11-25
 
 - Added 25-record article pagination, matching-result counts, deterministic date/ID ordering and recovery when a page becomes empty after filtering or removal.
